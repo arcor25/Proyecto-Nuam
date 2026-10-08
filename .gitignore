@@ -1,0 +1,25 @@
+# Python / Django
+venv/
+__pycache__/
+*.pyc
+db.sqlite3
+media/
+staticfiles/
+*.log
+
+# Node / React
+node_modules/
+dist/
+
+# Secretos
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Sistema / editor
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
