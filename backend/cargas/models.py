@@ -8,7 +8,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
 
-TAMANO_MAXIMO_BYTES = 5 * 1024 * 1024 #5 MB (Supuesto puede variar si el cliente lo estipule, mientras se queda asi por seguridad)
+TAMANO_MAXIMO_BYTES = settings.CSV_TAMANO_MAXIMO_MB * 1024 * 1024  # [Supuesto] 5 MB
 COLUMNAS_ESPERADAS = 38 # 8 campos fijos + 30 columnas (8 a 37). Segun HDU
 
 def _decimal(valor):

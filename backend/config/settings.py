@@ -137,7 +137,13 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Usuario personalizado (app usuarios)
 AUTH_USER_MODEL = "usuarios.Usuario"
 
+# Archivos subidos (app cargas)
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+CSV_TAMANO_MAXIMO_MB = int(os.getenv("CSV_TAMANO_MAXIMO_MB", "5"))
+
+# Auditoría (app auditoria)
+AUDITORIA_HMAC_KEY = os.getenv("AUDITORIA_HMAC_KEY")
