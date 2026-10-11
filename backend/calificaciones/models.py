@@ -8,7 +8,23 @@ from django.db import models
 from usuarios.models import Corredora
 
 OCHO_DECIMALES = Decimal("0.00000001")
-COLUMNAS_SUMA = range(8, 20) # Columnas 8 a 19
+COLUMNAS_SUMA = range(8, 20)  # Columnas 8 a 19 [Supuesto: el HDU también menciona 8–16]
+
+
+def calcular_factores_desde_montos(montos):
+    """Recibe {columna: monto} y devuelve {columna: factor} con 8 decimales.
+    Factor columna N = monto N / suma de montos de las columnas 8 a 19."""
+    suma = sum((monto for columna, monto in montos.items() if columna in COLUMNAS_SUMA), Decimal("0"))
+    if suma == 0:
+        raise ValidationError("la suma de montos de las columnas 8 a 19 no puede ser cero")
+    return {columna: (monto / suma).quantize(OCHO_DECIMALES, rounding=ROUND_HALF_UP)
+            for columna, monto in montos.items()}
+
+
+def factores_validos(factores):
+    """Cada factor entre 0 y 1, y la suma de las columnas 8 a 19 no supera 1."""
+    suma = sum((factor for columna, factor in factores.items() if columna in COLUMNAS_SUMA), Decimal("0"))
+    return suma <= 1 and all(Decimal("0") <= factor <= Decimal("1") for factor in factores.values())
 
 
 class Emisor(models.Model):
@@ -20,9 +36,10 @@ class Emisor(models.Model):
     rut_emisor = models.CharField(max_length=12, unique=True)
     razon_social = models.CharField(max_length=150)
     mercado = models.CharField(max_length=3, choices=Mercado.choices)
+    activo = models.BooleanField(default=True)
 
     def validar_rut(self):
-        """ Valida el digito verficador (modulo 11). Formato: 12345678-9 """
+        """Valida el dígito verificador (módulo 11). Formato: 12345678-9"""
         try:
             cuerpo, dv = self.rut_emisor.replace(".", "").upper().split("-")
             suma, factor = 0, 2
@@ -46,8 +63,8 @@ class Emisor(models.Model):
     def __str__(self):
         return self.razon_social
 
+
 class Instrumento(models.Model):
-    #nemotecnico es codigo corto con que se puede indentificar un instrumetno en la bolsa
     codigo_nemotecnico = models.CharField(max_length=50, unique=True)
     descripcion = models.CharField(max_length=255, blank=True)
     esta_inscrito = models.BooleanField(default=True)
@@ -71,6 +88,7 @@ class Instrumento(models.Model):
     def __str__(self):
         return self.codigo_nemotecnico
 
+
 class CalificacionTributaria(models.Model):
     class FormaActualizacion(models.TextChoices):
         INGRESO_MANUAL = "INGRESO_MANUAL", "Ingreso manual"
@@ -86,20 +104,16 @@ class CalificacionTributaria(models.Model):
         ABIERTA = "A", "Abierta"
         CERRADA = "C", "Cerrada"
 
-    # relaciones
-
+    # Relaciones
     corredora = models.ForeignKey(Corredora, on_delete=models.PROTECT, null=True, blank=True,
-                                  related_name="calificaciones") # null = calificaciones de bolsa
-
+                                  related_name="calificaciones")  
     registrado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True,
                                        related_name="calificaciones_registradas")
-
     instrumento = models.ForeignKey(Instrumento, on_delete=models.PROTECT, related_name="calificaciones")
     archivo_origen = models.ForeignKey("cargas.ArchivoCSV", on_delete=models.SET_NULL, null=True, blank=True,
-                                       related_name="calificaciones_generadas")
+                                       related_name="calificaciones_generadas")  
 
-    #atributos del diagrama de clases
-
+    # Atributos del diagrama
     secuencia_evento = models.PositiveIntegerField(validators=[MinValueValidator(10001)])
     fecha_pago = models.DateField()
     ejercicio_comercial = models.PositiveSmallIntegerField()
@@ -112,35 +126,26 @@ class CalificacionTributaria(models.Model):
     estado_periodo = models.CharField(max_length=10, choices=EstadoPeriodo.choices, default=EstadoPeriodo.ABIERTO)
     activo = models.BooleanField(default=True)
     fecha_ultima_modificacion = models.DateTimeField(auto_now=True)
-
-    # agregados desde el HDU
-
     numero_dividendo = models.PositiveIntegerField(default=0)
     tipo_sociedad = models.CharField(max_length=1, choices=TipoSociedad.choices, blank=True)
 
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["corredora","instrumento", "ejercicio_comercial", "secuencia_evento"],
-                name="llave_calificacion"
-            )
+                fields=["corredora", "instrumento", "ejercicio_comercial", "secuencia_evento"],
+                name="llave_calificacion",  # [Supuesto] llave del upsert
+            ),
         ]
 
     def calcular_factores(self):
-        """ Factores columna N = monto N / suma de montos de las columnas 8 a 19. """
         factores = list(self.factores.all())
-        suma = sum((f.monto_financiero for f in factores if f.columna in COLUMNAS_SUMA), Decimal("0"))
-        if suma == 0:
-            raise ValidationError("La suma de montos de las comlumnas 8 a 19 no puede ser cero. ")
+        nuevos = calcular_factores_desde_montos({f.columna: f.monto_financiero for f in factores})
         for f in factores:
-            f.factor_calculado = f.calcular_factor(suma)
-            f.save(update_fields=["factor_calculado"])
+            f.factor_calculado = nuevos[f.columna]
+        FactorTributario.objects.bulk_update(factores, ["factor_calculado"]) # bulk_update actualiza muchos registros en una sola consulta, en lugar de una consulta por registro.
 
     def validar_consistencia(self):
-        """ Cada factor entre 0 y 1, y la suma de las colummnas 8 a 19 ≤ 1. """
-        factores = list(self.factores.all())
-        suma = sum((f.factor_calculado for f in factores if f.columna in COLUMNAS_SUMA), Decimal("0"))
-        return suma <= 1 and all(f.validar_limite_factor() for f in factores)
+        return factores_validos({f.columna: f.factor_calculado for f in self.factores.all()})
 
     def aplicar_borrado_logico(self):
         self.activo = False
@@ -150,22 +155,22 @@ class CalificacionTributaria(models.Model):
         return self.estado_periodo == self.EstadoPeriodo.CERRADO
 
     def __str__(self):
-        return f"{self.instrumento} | {self.ejercicio_comercial} | sec . {self.secuencia_evento}"
+        return f"{self.instrumento} | {self.ejercicio_comercial} | sec. {self.secuencia_evento}"
+
 
 class FactorTributario(models.Model):
     calificacion = models.ForeignKey(CalificacionTributaria, on_delete=models.CASCADE, related_name="factores")
-    columna = models.PositiveSmallIntegerField(validators=[MinValueValidator(8),MaxValueValidator(37)])
+    columna = models.PositiveSmallIntegerField(validators=[MinValueValidator(8), MaxValueValidator(37)])
     monto_financiero = models.DecimalField(max_digits=20, decimal_places=8, default=0)
     factor_calculado = models.DecimalField(max_digits=10, decimal_places=8, default=0)
 
     class Meta:
         constraints = [
-            #UniqueConstraint impide que exista dos tablas con los mismos valores
-            models.UniqueConstraint(fields=["calificacion","columna"], name="factor_unico_por_columna"),
+            models.UniqueConstraint(fields=["calificacion", "columna"], name="factor_unico_por_columna"),
         ]
         ordering = ["columna"]
 
-    def calcular_factor(self, suma_total_montos): #quantize redondea la cantidad exacta de decimal
+    def calcular_factor(self, suma_total_montos):
         return (self.monto_financiero / suma_total_montos).quantize(OCHO_DECIMALES, rounding=ROUND_HALF_UP)
 
     def validar_limite_factor(self):
