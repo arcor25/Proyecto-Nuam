@@ -95,6 +95,8 @@ class CalificacionTributaria(models.Model):
                                        related_name="calificaciones_registradas")
 
     instrumento = models.ForeignKey(Instrumento, on_delete=models.PROTECT, related_name="calificaciones")
+    archivo_origen = models.ForeignKey("cargas.ArchivoCSV", on_delete=models.SET_NULL, null=True, blank=True,
+                                       related_name="calificaciones_generadas")
 
     #atributos del diagrama de clases
 
@@ -116,6 +118,13 @@ class CalificacionTributaria(models.Model):
     numero_dividendo = models.PositiveIntegerField(default=0)
     tipo_sociedad = models.CharField(max_length=1, choices=TipoSociedad.choices, blank=True)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["corredora","instrumento", "ejercicio_comercial", "secuencia_evento"],
+                name="llave_calificacion"
+            )
+        ]
 
     def calcular_factores(self):
         """ Factores columna N = monto N / suma de montos de las columnas 8 a 19. """
