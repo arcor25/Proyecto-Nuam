@@ -147,3 +147,7 @@ CSV_TAMANO_MAXIMO_MB = int(os.getenv("CSV_TAMANO_MAXIMO_MB", "5"))
 
 # Auditoría (app auditoria)
 AUDITORIA_HMAC_KEY = os.getenv("AUDITORIA_HMAC_KEY")
+
+# MongoDB (base documental del sistema híbrido)
+MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
+MONGO_DB = os.getenv("MONGO_DB", "nuam")

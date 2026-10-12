@@ -12,6 +12,9 @@ from auditoria.models import BitacoraAuditoria
 from calificaciones.models import (CalificacionTributaria, FactorTributario, Instrumento,
                                    calcular_factores_desde_montos, factores_validos)
 
+from calificaciones.documentos import registrar_versiones, version_documento
+from cargas.documentos import guardar_resultado_carga
+
 TAMANO_MAXIMO_BYTES = settings.CSV_TAMANO_MAXIMO_MB * 1024 * 1024  # [Supuesto] 5 MB
 COLUMNAS_ESPERADAS = 38       # 8 campos fijos + 30 columnas (8 a 37), según HDU
 COLUMNAS = range(8, 38)
@@ -137,23 +140,28 @@ class ArchivoCSV(models.Model):
         return llave, instrumento, existente, campos, valores, factores
 
     def procesar_lote(self, ip=None):
-        """Upsert masivo por llave [Supuesto]: corredora + instrumento + ejercicio comercial + secuencia de evento."""
+        """Upsert masivo por llave [Supuesto]: corredora + instrumento + ejercicio comercial + secuencia de evento.
+        MySQL guarda los datos; MongoDB, el detalle de la carga y el historial de versiones."""
         corredora = self.cargado_por.corredora
         if corredora is None:
             raise ValidationError("Tu usuario no está asociado a una corredora, por lo que no puede cargar archivos.")
 
         filas = self._leer_filas()
+        previsualizacion = filas[:11]  # encabezado + 10 filas
         if not (self.validar_tamano_maximo() and self.validar_formato(filas)):
+            errores = ["El archivo supera el tamaño permitido o no tiene las 38 columnas requeridas."]
             self.estado_carga = self.EstadoCarga.CON_ERRORES
             self.save()
-            return ["El archivo supera el tamaño permitido o no tiene las 38 columnas requeridas."]
+            guardar_resultado_carga(self, {"filas": len(filas) - 1, "validas": 0, "rechazadas": len(filas) - 1},
+                                    errores, previsualizacion)
+            return errores
 
         datos = filas[1:]
         es_montos = self.formato_tipo == self.TipoCarga.MONTOS
         Forma = CalificacionTributaria.FormaActualizacion
         origen = Forma.CARGA_MONTOS if es_montos else Forma.CARGA_FACTORES
 
-        # Precarga en memoria (2 consultas)
+        # 1. Precarga en memoria (2 consultas a MySQL)
         nemos = {fila[2].strip() for fila in datos}
         ejercicios = {int(fila[0]) for fila in datos if fila[0].strip().isdigit()}
         instrumentos = {i.codigo_nemotecnico: i for i in
@@ -163,7 +171,7 @@ class ArchivoCSV(models.Model):
                                                             instrumento__in=instrumentos.values(),
                                                             ejercicio_comercial__in=ejercicios)}
 
-        # Validación en memoria (sin consultas)
+        # 2. Validación en memoria (sin consultas)
         errores, validas, llaves_vistas = [], [], set()
         for numero_fila, fila in enumerate(datos, start=2):
             try:
@@ -177,7 +185,7 @@ class ArchivoCSV(models.Model):
             llaves_vistas.add(registro[0])
             validas.append(registro)
 
-        # Escritura en bloque: todo o nada para las filas válidas
+        # 3. Escritura en bloque en MySQL: todo o nada para las filas válidas
         ahora = timezone.now()
         nuevas, actualizadas = [], []
         try:
@@ -202,7 +210,7 @@ class ArchivoCSV(models.Model):
                 por_llave = {(c.instrumento_id, c.ejercicio_comercial, c.secuencia_evento): c for c in
                              CalificacionTributaria.objects.filter(corredora=corredora, archivo_origen=self)}
 
-                # Factores: se reemplazan completos (composición 1 → 30)
+                # 4. Factores: se reemplazan completos (composición 1 → 30)
                 FactorTributario.objects.filter(calificacion__in=actualizadas).delete()
                 FactorTributario.objects.bulk_create([
                     FactorTributario(calificacion=por_llave[llave], columna=columna,
@@ -212,20 +220,30 @@ class ArchivoCSV(models.Model):
                     for columna in COLUMNAS
                 ], batch_size=LOTE_BD)
 
-                #  Un evento de bitácora por archivo
+                # 5. Bitácora en MySQL, en la misma transacción
                 BitacoraAuditoria.registrar_evento(
                     self.cargado_por, BitacoraAuditoria.TipoAccion.CARGA_MASIVA, ip, "ArchivoCSV", self.pk,
                     forma=origen, valor_nuevo={"creadas": len(nuevas), "actualizadas": len(actualizadas),
                                                "rechazadas": len(errores)})
+
+                # 6. Historial en MongoDB: solo si MySQL confirma la transacción
+                versiones = [version_documento(por_llave[llave], factores, origen, self.cargado_por.email,
+                                               f"Carga {self.nombre_archivo}", ahora)
+                             for llave, _, _, _, _, factores in validas]
+                transaction.on_commit(lambda: registrar_versiones(versiones))
         except DatabaseError:
             errores.append("Error al guardar en la base de datos: no se guardó ninguna fila. Intente nuevamente.")
-            validas = []
+            validas, nuevas, actualizadas = [], [], []
 
         self.filas_validas = len(validas)
         self.filas_rechazadas = self.total_filas - len(validas)
         self.estado_carga = self.EstadoCarga.CON_ERRORES if errores else self.EstadoCarga.CARGADA
         self.save()
-        return errores
 
+        # 7. Detalle de la carga en MongoDB
+        guardar_resultado_carga(self, {"filas": self.total_filas, "validas": self.filas_validas,
+                                       "rechazadas": self.filas_rechazadas, "creadas": len(nuevas),
+                                       "actualizadas": len(actualizadas)}, errores, previsualizacion)
+        return errores
     def __str__(self):
         return f"{self.nombre_archivo} ({self.get_estado_carga_display()})"

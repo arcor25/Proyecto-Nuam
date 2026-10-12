@@ -8,6 +8,8 @@ from django.utils import timezone
 from auditoria.models import BitacoraAuditoria
 from calificaciones.models import CalificacionTributaria, FactorTributario
 
+from calificaciones.documentos import registrar_versiones, version_documento
+
 OCHO_DECIMALES = Decimal("0.00000001")
 
 
@@ -98,6 +100,10 @@ class SolicitudRectificacion(models.Model):
                     raise ValidationError("Los factores propuestos no cumplen las reglas: cada uno entre 0 y 1 "
                                           "y la suma de las columnas 8 a 19 no puede superar 1.")
                 self.calificacion.save(update_fields=["fecha_ultima_modificacion"])
+                factores = {f.columna: f.factor_calculado for f in self.calificacion.factores.all()}
+                version = version_documento(self.calificacion, factores, "RECTIFICACION", supervisor.email,
+                                            f"Solicitud {self.pk}: {self.motivo_rectificacion}", timezone.now())
+                transaction.on_commit(lambda: registrar_versiones([version]))
 
             self.supervisor = supervisor
             self.estado_solicitud = self.EstadoSolicitud.APROBADA if aprobada else self.EstadoSolicitud.RECHAZADA
