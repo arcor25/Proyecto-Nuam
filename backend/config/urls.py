@@ -16,7 +16,25 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from rest_framework_simplejwt.views import TokenRefreshView
+
+from usuarios.views import LoginView, LogoutView, PerfilView
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def health(request):
+    return Response({"estado": "ok"})
+
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path("admin/", admin.site.urls),
+    path("api/health/", health),
+    path("api/auth/login/", LoginView.as_view()),
+    path("api/auth/refresh/", TokenRefreshView.as_view()),
+    path("api/auth/logout/", LogoutView.as_view()),
+    path("api/auth/perfil/", PerfilView.as_view()),
 ]
