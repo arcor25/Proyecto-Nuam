@@ -23,6 +23,8 @@ from rest_framework_simplejwt.views import TokenRefreshView
 
 from usuarios.views import LoginView, LogoutView, PerfilView
 
+from calificaciones.views import mantenedor
+
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
@@ -37,4 +39,5 @@ urlpatterns = [
     path("api/auth/refresh/", TokenRefreshView.as_view()),
     path("api/auth/logout/", LogoutView.as_view()),
     path("api/auth/perfil/", PerfilView.as_view()),
+    path("calificaciones/", mantenedor, name="mantenedor"),
 ]

@@ -69,7 +69,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / "templates"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -200,3 +200,5 @@ CSRF_TRUSTED_ORIGINS = [o.strip() for o in os.getenv("CSRF_TRUSTED_ORIGINS", "ht
 # Reglas de la DJ 1948 (HU-27): configurables sin reprogramar
 FACTOR_SUMA_DESDE = int(os.getenv("FACTOR_SUMA_DESDE", "8"))
 FACTOR_SUMA_HASTA = int(os.getenv("FACTOR_SUMA_HASTA", "19"))
+
+LOGIN_URL = "/admin/login/"
