@@ -103,7 +103,19 @@ class ArchivoCSV(models.Model):
     def previsualizar_datos(self, cantidad=10):
         filas = self._leer_filas()
         return {"encabezado": filas[0], "filas": filas[1:cantidad + 1]}
-
+    
+    def _precargar(self, datos, corredora):
+        """Carga en memoria los instrumentos y calificaciones existentes que usa el archivo (2 consultas)."""
+        nemos = {fila[2].strip() for fila in datos}
+        ejercicios = {int(fila[0]) for fila in datos if fila[0].strip().isdigit()}
+        instrumentos = {i.codigo_nemotecnico: i for i in
+                        Instrumento.objects.select_related("emisor").filter(codigo_nemotecnico__in=nemos)}
+        existentes = {(c.instrumento_id, c.ejercicio_comercial, c.secuencia_evento): c for c in
+                      CalificacionTributaria.objects.filter(corredora=corredora,
+                                                            instrumento__in=instrumentos.values(),
+                                                            ejercicio_comercial__in=ejercicios)}
+        return instrumentos, existentes
+    
     # ---------- Procesamiento ----------
     def _validar_fila(self, fila, instrumentos, existentes, es_montos):
         """Valida una fila en memoria e indica columna y motivo de cada error (HU-06 criterio 3)."""
@@ -159,7 +171,40 @@ class ArchivoCSV(models.Model):
         campos = {"fecha_pago": fecha_pago, "numero_dividendo": dividendo,
                   "tipo_sociedad": tipo_soc, "valor_historico": valor_historico}
         return llave, instrumento, existente, campos, valores, factores
+    
+    def validar_lote(self, limite=200):
+        """Valida todas las filas SIN guardar (botón «Calcular factores»).
+        Devuelve el estado de cada fila (OK o ERROR), su motivo y los factores calculados."""
+        corredora = self.cargado_por.corredora
+        filas = self._leer_filas()
+        total = max(len(filas) - 1, 0)
+        if not (self.validar_tamano_maximo() and self.validar_formato(filas)):
+            return {"formato_valido": False, "total": total, "validas": 0, "rechazadas": total, "filas": []}
 
+        datos = filas[1:]
+        es_montos = self.formato_tipo == self.TipoCarga.MONTOS
+        instrumentos, existentes = self._precargar(datos, corredora)
+        resultado, llaves_vistas, validas = [], set(), 0
+        for numero_fila, fila in enumerate(datos, start=2):
+            entrada = {"fila": numero_fila, "datos": fila[:8]}
+            try:
+                llave, _, _, _, _, factores = self._validar_fila(fila, instrumentos, existentes, es_montos)
+                if llave in llaves_vistas:
+                    raise ValueError("está repetida en el archivo (misma llave que una fila anterior)")
+                llaves_vistas.add(llave)
+                validas += 1
+                entrada.update(estado="OK", factores={str(c): str(v) for c, v in factores.items()})
+            except (ValueError, InvalidOperation, ValidationError) as error:
+                motivo = error.messages[0] if isinstance(error, ValidationError) else str(error)
+                entrada.update(estado="ERROR", motivo=motivo)
+            if len(resultado) < limite:  # la pantalla muestra hasta 200 filas; los totales cuentan todas
+                resultado.append(entrada)
+
+        self.estado_carga = self.EstadoCarga.VALIDADA if validas == len(datos) else self.EstadoCarga.CON_ERRORES
+        self.save(update_fields=["estado_carga", "total_filas"])
+        return {"formato_valido": True, "total": len(datos), "validas": validas,
+                "rechazadas": len(datos) - validas, "filas": resultado}
+    
     def procesar_lote(self, ip=None):
         """Upsert masivo por llave [Supuesto]: corredora + instrumento + ejercicio comercial + secuencia de evento.
         MySQL guarda los datos; MongoDB, el detalle de la carga y el historial de versiones."""
@@ -184,14 +229,7 @@ class ArchivoCSV(models.Model):
         origen = Forma.CARGA_MONTOS if es_montos else Forma.CARGA_FACTORES
 
         # 1. Precarga en memoria (2 consultas a MySQL)
-        nemos = {fila[2].strip() for fila in datos}
-        ejercicios = {int(fila[0]) for fila in datos if fila[0].strip().isdigit()}
-        instrumentos = {i.codigo_nemotecnico: i for i in
-                        Instrumento.objects.select_related("emisor").filter(codigo_nemotecnico__in=nemos)}
-        existentes = {(c.instrumento_id, c.ejercicio_comercial, c.secuencia_evento): c for c in
-                      CalificacionTributaria.objects.filter(corredora=corredora,
-                                                            instrumento__in=instrumentos.values(),
-                                                            ejercicio_comercial__in=ejercicios)}
+        instrumentos, existentes = self._precargar(datos, corredora)
 
         # 2. Validación en memoria (sin consultas)
         errores, validas, llaves_vistas = [], [], set()

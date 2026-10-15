@@ -32,6 +32,8 @@ from calificaciones.api import EmisorViewSet, InstrumentoViewSet
 
 from calificaciones.api import CalificacionViewSet, EmisorViewSet, InstrumentoViewSet
 
+from cargas.api import ArchivoCSVViewSet
+
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def health(request):
@@ -42,6 +44,8 @@ router.register("emisores", EmisorViewSet, basename="emisor")
 router.register("instrumentos", InstrumentoViewSet, basename="instrumento")
 
 router.register("calificaciones", CalificacionViewSet, basename="calificacion")
+
+router.register("cargas", ArchivoCSVViewSet, basename="carga")
 
 urlpatterns = [
     path("admin/", admin.site.urls),
