@@ -25,11 +25,21 @@ from usuarios.views import LoginView, LogoutView, PerfilView
 
 from calificaciones.views import mantenedor
 
+from django.urls import include
+from rest_framework.routers import DefaultRouter
+
+from calificaciones.api import EmisorViewSet, InstrumentoViewSet
+
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def health(request):
     return Response({"estado": "ok"})
+
+router = DefaultRouter()
+router.register("emisores", EmisorViewSet, basename="emisor")
+router.register("instrumentos", InstrumentoViewSet, basename="instrumento")
+
 
 
 urlpatterns = [
@@ -40,4 +50,6 @@ urlpatterns = [
     path("api/auth/logout/", LogoutView.as_view()),
     path("api/auth/perfil/", PerfilView.as_view()),
     path("calificaciones/", mantenedor, name="mantenedor"),
+    path("api/", include(router.urls)),
+    path("api-auth/", include("rest_framework.urls")),  # login para probar la API con usuarios que no son del admin
 ]

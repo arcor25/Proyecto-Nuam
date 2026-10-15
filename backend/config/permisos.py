@@ -10,3 +10,16 @@ def rol_requerido(*roles):
             return bool(request.user and request.user.is_authenticated and request.user.rol in roles)
 
     return PermisoPorRol
+
+
+from rest_framework.permissions import SAFE_METHODS
+
+
+class LecturaAutenticadaEscrituraAdminTI(BasePermission):
+    """Consultar: cualquier usuario autenticado. Crear, modificar o desactivar: solo Administrador TI."""
+    message = "Solo el Administrador TI puede modificar estos datos."
+
+    def has_permission(self, request, view):
+        if not (request.user and request.user.is_authenticated):
+            return False
+        return request.method in SAFE_METHODS or request.user.rol == "ADMIN_TI"
