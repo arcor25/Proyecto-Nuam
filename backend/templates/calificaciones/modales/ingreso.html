@@ -1,0 +1,150 @@
+<!-- MODAL INGRESO -->
+<div class="modal fade" id="modalIngreso" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content border-secondary shadow-lg">
+
+            <div class="modal-header py-2 bg-light">
+                <h6 class="modal-title text-primary fw-bold mb-0">Ingreso de Calificación Tributaria</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+
+            <div class="modal-body p-3" style="font-size: 0.78rem;">
+                <form id="formIngreso" novalidate>
+                    {% csrf_token %}
+
+                    <!-- CABECERA (3 COLUMNAS) -->
+                    <div class="row g-2 mb-3 bg-light p-2 border rounded">
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center mb-1">
+                                <label for="ingMercado" class="w-40 fw-semibold">Mercado:</label>
+                                <select id="ingMercado" name="mercado" class="form-select form-select-sm" required>
+                                    <option value="ACN">Acciones</option>
+                                    <option value="CFI">Cuotas de fondos de inversión</option>
+                                    <option value="FM">Fondos mutuos</option>
+                                </select>
+                            </div>
+                            <div class="d-flex align-items-center mb-1">
+                                <label for="ingInstrumento" class="w-40 fw-semibold">Instrumento:</label>
+                                <input id="ingInstrumento" type="text" name="instrumento" class="form-control form-control-sm"
+                                       maxlength="50" placeholder="Nemotécnico" required>
+                            </div>
+                            <div class="d-flex align-items-center mb-1">
+                                <label for="ingSecuencia" class="w-40 fw-semibold">Secuencia Evento:</label>
+                                <input id="ingSecuencia" type="number" name="secuencia_evento" class="form-control form-control-sm"
+                                       min="10001" step="1" placeholder="Mayor a 10.000" required>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <label for="ingDividendo" class="w-40 fw-semibold">Dividendo:</label>
+                                <input id="ingDividendo" type="number" name="numero_dividendo" class="form-control form-control-sm"
+                                       min="0" step="1" value="0">
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center mb-1">
+                                <label for="ingFechaPago" class="w-40 fw-semibold">Fecha Pago:</label>
+                                <input id="ingFechaPago" type="date" name="fecha_pago" class="form-control form-control-sm" required>
+                            </div>
+                            <div class="d-flex align-items-center mb-1">
+                                <label for="ingEjercicio" class="w-40 fw-semibold">Año:</label>
+                                <input id="ingEjercicio" type="number" name="ejercicio_comercial" class="form-control form-control-sm"
+                                       min="1900" max="2100" step="1" placeholder="Ej. 2025" required>
+                            </div>
+                            <div class="d-flex align-items-center mb-1">
+                                <label for="ingValorHistorico" class="w-40 fw-semibold">Valor Histórico:</label>
+                                <input id="ingValorHistorico" type="text" name="valor_historico" class="form-control form-control-sm"
+                                       inputmode="decimal" value="0">
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <label for="ingTipoSociedad" class="w-40 fw-semibold">Tipo Sociedad:</label>
+                                <select id="ingTipoSociedad" name="tipo_sociedad" class="form-select form-select-sm">
+                                    <option value="">—</option>
+                                    <option value="A">Abierta</option>
+                                    <option value="C">Cerrada</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center mb-1">
+                                <label for="ingDescripcion" class="w-40 fw-semibold">Descripción:</label>
+                                <input id="ingDescripcion" type="text" name="descripcion" class="form-control form-control-sm"
+                                       maxlength="255">
+                            </div>
+                            <div class="d-flex align-items-center mb-1">
+                                <label for="ingFactorAct" class="w-40 fw-semibold">Factor Actualización:</label>
+                                <input id="ingFactorAct" type="text" name="factor_actualizacion" class="form-control form-control-sm"
+                                       inputmode="decimal" value="0">
+                            </div>
+                            <div class="d-flex align-items-center mb-1">
+                                <label for="ingIsfut" class="w-40 fw-semibold">Acogido ISFUT:</label>
+                                <input id="ingIsfut" type="checkbox" name="is_fut" class="form-check-input ms-2">
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <label for="ingPorMontos" class="w-40 fw-semibold">Ingreso por Montos:</label>
+                                <input id="ingPorMontos" type="checkbox" name="ingreso_montos" class="form-check-input ms-2">
+                            </div>
+                        </div>
+                    </div>
+
+                    <p class="text-muted mb-2" id="ingAyudaFactores">
+                        Ingrese los factores (8 decimales, cada uno entre 0 y 1). Si marca «Ingreso por Montos»,
+                        ingrese montos y presione «Calcular factores».
+                    </p>
+
+                    <!-- GRILLA DE FACTORES 8 A 37 (3 COLUMNAS × 10) -->
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <div class="mb-1"><label for="f08" class="form-label mb-0 small">Factor-08 No Constitutiva Renta No Acogido Impto.</label><input id="f08" type="text" name="f08" class="form-control form-control-sm" inputmode="decimal"></div>
+                            <div class="mb-1"><label for="f11" class="form-label mb-0 small">Factor-11 Incremento Impuesto 1ra Categoría</label><input id="f11" type="text" name="f11" class="form-control form-control-sm" inputmode="decimal"></div>
+                            <div class="mb-1"><label for="f14" class="form-label mb-0 small">Factor-14 Impto. 1ra Categ. Exento GI. Comp. Sin Devolución</label><input id="f14" type="text" name="f14" class="form-control form-control-sm" inputmode="decimal"></div>
+                            <div class="mb-1"><label for="f17" class="form-label mb-0 small">Factor-17 No Constitutiva Renta Devolución Capital Art.17</label><input id="f17" type="text" name="f17" class="form-control form-control-sm" inputmode="decimal"></div>
+                            <div class="mb-1"><label for="f20" class="form-label mb-0 small">Factor-20 Sin Derecho a Devolución</label><input id="f20" type="text" name="f20" class="form-control form-control-sm" inputmode="decimal"></div>
+                            <div class="mb-1"><label for="f23" class="form-label mb-0 small">Factor-23 Con Derecho a Devolución</label><input id="f23" type="text" name="f23" class="form-control form-control-sm" inputmode="decimal"></div>
+                            <div class="mb-1"><label for="f26" class="form-label mb-0 small">Factor-26 Sin Derecho a Devolución</label><input id="f26" type="text" name="f26" class="form-control form-control-sm" inputmode="decimal"></div>
+                            <div class="mb-1"><label for="f29" class="form-label mb-0 small">Factor-29 Sin Derecho a Devolución</label><input id="f29" type="text" name="f29" class="form-control form-control-sm" inputmode="decimal"></div>
+                            <div class="mb-1"><label for="f32" class="form-label mb-0 small">Factor-32 Con Derecho a Devolución</label><input id="f32" type="text" name="f32" class="form-control form-control-sm" inputmode="decimal"></div>
+                            <div class="mb-1"><label for="f35" class="form-label mb-0 small">Factor-35 Tasa Efectiva Del Cred. Del FUT (TEF)</label><input id="f35" type="text" name="f35" class="form-control form-control-sm" inputmode="decimal"></div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="mb-1"><label for="f09" class="form-label mb-0 small">Factor-09 Impto. 1ra Categ. Afecto GI. Comp. Con Devolución</label><input id="f09" type="text" name="f09" class="form-control form-control-sm" inputmode="decimal"></div>
+                            <div class="mb-1"><label for="f12" class="form-label mb-0 small">Factor-12 Impto. 1ra Categ. Exento GI. Comp. Con Devolución</label><input id="f12" type="text" name="f12" class="form-control form-control-sm" inputmode="decimal"></div>
+                            <div class="mb-1"><label for="f15" class="form-label mb-0 small">Factor-15 Impto. Créditos por Impuestos Externos</label><input id="f15" type="text" name="f15" class="form-control form-control-sm" inputmode="decimal"></div>
+                            <div class="mb-1"><label for="f18" class="form-label mb-0 small">Factor-18 Rentas Exentas de Impto. GC y/o Impto. Adicional</label><input id="f18" type="text" name="f18" class="form-control form-control-sm" inputmode="decimal"></div>
+                            <div class="mb-1"><label for="f21" class="form-label mb-0 small">Factor-21 Con Derecho a Devolución</label><input id="f21" type="text" name="f21" class="form-control form-control-sm" inputmode="decimal"></div>
+                            <div class="mb-1"><label for="f24" class="form-label mb-0 small">Factor-24 Sin Derecho a Devolución</label><input id="f24" type="text" name="f24" class="form-control form-control-sm" inputmode="decimal"></div>
+                            <div class="mb-1"><label for="f27" class="form-label mb-0 small">Factor-27 Con Derecho a Devolución</label><input id="f27" type="text" name="f27" class="form-control form-control-sm" inputmode="decimal"></div>
+                            <div class="mb-1"><label for="f30" class="form-label mb-0 small">Factor-30 Con Derecho a Devolución</label><input id="f30" type="text" name="f30" class="form-control form-control-sm" inputmode="decimal"></div>
+                            <div class="mb-1"><label for="f33" class="form-label mb-0 small">Factor-33 Crédito por IPE</label><input id="f33" type="text" name="f33" class="form-control form-control-sm" inputmode="decimal"></div>
+                            <div class="mb-1"><label for="f36" class="form-label mb-0 small">Factor-36 Tasa Efectiva Del Cred. Del FUNT (TEX)</label><input id="f36" type="text" name="f36" class="form-control form-control-sm" inputmode="decimal"></div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="mb-1"><label for="f10" class="form-label mb-0 small">Factor-10 Impuesto Tasa Adicional Exento Art. 21</label><input id="f10" type="text" name="f10" class="form-control form-control-sm" inputmode="decimal"></div>
+                            <div class="mb-1"><label for="f13" class="form-label mb-0 small">Factor-13 Impto. 1ra Categ. Afecto GI. Comp. Sin Devolución</label><input id="f13" type="text" name="f13" class="form-control form-control-sm" inputmode="decimal"></div>
+                            <div class="mb-1"><label for="f16" class="form-label mb-0 small">Factor-16 No Constitutiva Renta Acogida Impto.</label><input id="f16" type="text" name="f16" class="form-control form-control-sm" inputmode="decimal"></div>
+                            <div class="mb-1"><label for="f19" class="form-label mb-0 small">Factor-19 Ingreso no Constitutivos de Renta</label><input id="f19" type="text" name="f19" class="form-control form-control-sm" inputmode="decimal"></div>
+                            <div class="mb-1"><label for="f22" class="form-label mb-0 small">Factor-22 Sin Derecho a Devolución</label><input id="f22" type="text" name="f22" class="form-control form-control-sm" inputmode="decimal"></div>
+                            <div class="mb-1"><label for="f25" class="form-label mb-0 small">Factor-25 Con Derecho a Devolución</label><input id="f25" type="text" name="f25" class="form-control form-control-sm" inputmode="decimal"></div>
+                            <div class="mb-1"><label for="f28" class="form-label mb-0 small">Factor-28 Crédito por IPE</label><input id="f28" type="text" name="f28" class="form-control form-control-sm" inputmode="decimal"></div>
+                            <div class="mb-1"><label for="f31" class="form-label mb-0 small">Factor-31 Sin Derecho a Devolución</label><input id="f31" type="text" name="f31" class="form-control form-control-sm" inputmode="decimal"></div>
+                            <div class="mb-1"><label for="f34" class="form-label mb-0 small">Factor-34 Cred. Por Impto. Tasa Adicional, Ex Art. 21 LIR</label><input id="f34" type="text" name="f34" class="form-control form-control-sm" inputmode="decimal"></div>
+                            <div class="mb-1"><label for="f37" class="form-label mb-0 small">Factor-37 Devolución Capital Art. 17 num 7 LIR</label><input id="f37" type="text" name="f37" class="form-control form-control-sm" inputmode="decimal"></div>
+                        </div>
+                    </div>
+
+                    <!-- Mensajes de validación o respuesta del servidor -->
+                    <div id="ingMensajes" class="alert alert-danger d-none mt-2 mb-0 py-1" role="alert"></div>
+                </form>
+            </div>
+
+            <div class="modal-footer justify-content-end gap-2 py-2">
+                <button type="button" class="btn btn-sm btn-outline-primary px-4" id="btnCalcularIngreso" disabled>CALCULAR FACTORES</button>
+                <button type="button" class="btn btn-sm text-white px-4 fw-bold" style="background-color: #1C4E80;" id="btnGrabarIngreso">GRABAR</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary px-4" data-bs-dismiss="modal">CANCELAR</button>
+            </div>
+
+        </div>
+    </div>
+</div>

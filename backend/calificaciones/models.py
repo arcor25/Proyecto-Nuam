@@ -1,4 +1,4 @@
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -8,24 +8,54 @@ from django.db import models
 from usuarios.models import Corredora
 
 OCHO_DECIMALES = Decimal("0.00000001")
-COLUMNAS_SUMA = range(8, 20)  # Columnas 8 a 19 [Supuesto: el HDU también menciona 8–16]
+COLUMNAS_SUMA = range(settings.FACTOR_SUMA_DESDE, settings.FACTOR_SUMA_HASTA + 1)  # [Supuesto] 8 a 19 (HU-27)
 
+
+# ---------- Reglas de cálculo y validación (reutilizadas por cargas y rectificaciones) ----------
 
 def calcular_factores_desde_montos(montos):
-    """Recibe {columna: monto} y devuelve {columna: factor} con 8 decimales.
-    Factor columna N = monto N / suma de montos de las columnas 8 a 19."""
+    """HU-04. Recibe {columna: monto} y devuelve {columna: factor} con 8 decimales.
+    Factor columna N = monto N / suma de montos de las columnas configuradas (8 a 19)."""
     suma = sum((monto for columna, monto in montos.items() if columna in COLUMNAS_SUMA), Decimal("0"))
     if suma == 0:
-        raise ValidationError("la suma de montos de las columnas 8 a 19 no puede ser cero")
+        raise ValidationError(f"la suma de montos de las columnas {COLUMNAS_SUMA.start} a "
+                              f"{COLUMNAS_SUMA.stop - 1} no puede ser cero")
     return {columna: (monto / suma).quantize(OCHO_DECIMALES, rounding=ROUND_HALF_UP)
             for columna, monto in montos.items()}
 
 
-def factores_validos(factores):
-    """Cada factor entre 0 y 1, y la suma de las columnas 8 a 19 no supera 1."""
-    suma = sum((factor for columna, factor in factores.items() if columna in COLUMNAS_SUMA), Decimal("0"))
-    return suma <= 1 and all(Decimal("0") <= factor <= Decimal("1") for factor in factores.values())
+def leer_factor(texto, columna):
+    """HU-05 y HU-07. Convierte un factor ingresado: número con un entero y hasta 8 decimales."""
+    limpio = str(texto).strip() or "0"
+    if "," in limpio and "." in limpio:
+        raise ValidationError(f"el factor {columna} tiene separador de miles")
+    try:
+        valor = Decimal(limpio.replace(",", "."))
+    except InvalidOperation:
+        raise ValidationError(f"el factor {columna} ('{texto}') no es un número válido")
+    if valor.as_tuple().exponent < -8:
+        raise ValidationError(f"el factor {columna} ('{texto}') tiene más de 8 decimales")
+    return valor.quantize(OCHO_DECIMALES)
 
+
+def errores_factores(factores):
+    """HU-05 criterio 3. Un mensaje por cada regla incumplida, indicando el factor.
+    Lista vacía = factores válidos."""
+    errores = [f"el factor {columna} ({factor}) debe estar entre 0 y 1"
+               for columna, factor in sorted(factores.items())
+               if not Decimal("0") <= factor <= Decimal("1")]
+    suma = sum((factor for columna, factor in factores.items() if columna in COLUMNAS_SUMA), Decimal("0"))
+    if suma > 1:
+        errores.append(f"la suma de los factores {COLUMNAS_SUMA.start} a {COLUMNAS_SUMA.stop - 1} "
+                       f"es {suma} y no puede superar 1")
+    return errores
+
+
+def factores_validos(factores):
+    return not errores_factores(factores)
+
+
+# ---------- Modelos ----------
 
 class Emisor(models.Model):
     class Mercado(models.TextChoices):
@@ -51,6 +81,11 @@ class Emisor(models.Model):
             return dv == dv_esperado
         except ValueError:
             return False
+
+    def clean(self):
+        """HU-16: no se guarda un emisor con dígito verificador incorrecto."""
+        if not self.validar_rut():
+            raise ValidationError({"rut_emisor": "El RUT del emisor no es válido: revise el dígito verificador."})
 
     def activar(self):
         self.activo = True
@@ -106,12 +141,12 @@ class CalificacionTributaria(models.Model):
 
     # Relaciones
     corredora = models.ForeignKey(Corredora, on_delete=models.PROTECT, null=True, blank=True,
-                                  related_name="calificaciones")  
+                                  related_name="calificaciones")  # 0..1: null = calificación de Bolsa
     registrado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True,
                                        related_name="calificaciones_registradas")
     instrumento = models.ForeignKey(Instrumento, on_delete=models.PROTECT, related_name="calificaciones")
     archivo_origen = models.ForeignKey("cargas.ArchivoCSV", on_delete=models.SET_NULL, null=True, blank=True,
-                                       related_name="calificaciones_generadas")  
+                                       related_name="calificaciones_generadas")  # 0..1
 
     # Atributos del diagrama
     secuencia_evento = models.PositiveIntegerField(validators=[MinValueValidator(10001)])
@@ -142,10 +177,14 @@ class CalificacionTributaria(models.Model):
         nuevos = calcular_factores_desde_montos({f.columna: f.monto_financiero for f in factores})
         for f in factores:
             f.factor_calculado = nuevos[f.columna]
-        FactorTributario.objects.bulk_update(factores, ["factor_calculado"]) # bulk_update actualiza muchos registros en una sola consulta, en lugar de una consulta por registro.
+        FactorTributario.objects.bulk_update(factores, ["factor_calculado"])
+
+    def errores_consistencia(self):
+        """Mensajes de los factores que no cumplen las reglas (vacío = consistente)."""
+        return errores_factores({f.columna: f.factor_calculado for f in self.factores.all()})
 
     def validar_consistencia(self):
-        return factores_validos({f.columna: f.factor_calculado for f in self.factores.all()})
+        return not self.errores_consistencia()
 
     def aplicar_borrado_logico(self):
         self.activo = False

@@ -196,3 +196,7 @@ DETRAS_DE_PROXY = os.getenv("DETRAS_DE_PROXY", "False") == "True"
 
 # Orígenes de confianza para formularios (admin)
 CSRF_TRUSTED_ORIGINS = [o.strip() for o in os.getenv("CSRF_TRUSTED_ORIGINS", "http://localhost:8000").split(",")]
+
+# Reglas de la DJ 1948 (HU-27): configurables sin reprogramar
+FACTOR_SUMA_DESDE = int(os.getenv("FACTOR_SUMA_DESDE", "8"))
+FACTOR_SUMA_HASTA = int(os.getenv("FACTOR_SUMA_HASTA", "19"))

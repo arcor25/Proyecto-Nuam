@@ -9,13 +9,12 @@ from django.db import DatabaseError, models, transaction
 from django.utils import timezone
 
 from auditoria.models import BitacoraAuditoria
-from calificaciones.models import (CalificacionTributaria, FactorTributario, Instrumento,
-                                   calcular_factores_desde_montos, factores_validos)
-
 from calificaciones.documentos import registrar_versiones, version_documento
+from calificaciones.models import (CalificacionTributaria, FactorTributario, Instrumento,
+                                   calcular_factores_desde_montos, errores_factores, leer_factor)
 from cargas.documentos import guardar_resultado_carga
 
-TAMANO_MAXIMO_BYTES = settings.CSV_TAMANO_MAXIMO_MB * 1024 * 1024  # [Supuesto] 5 MB
+TAMANO_MAXIMO_BYTES = settings.CSV_TAMANO_MAXIMO_MB * 1024 * 1024  # HU-06: 10 MB (configurable)
 COLUMNAS_ESPERADAS = 38       # 8 campos fijos + 30 columnas (8 a 37), según HDU
 COLUMNAS = range(8, 38)
 LOTE_BD = 1000                # registros por consulta en operaciones masivas
@@ -34,6 +33,13 @@ def _decimal(valor):
     if abs(numero) >= VALOR_MAXIMO:
         raise ValueError(f"el valor '{valor}' es demasiado grande")
     return numero
+
+
+def _entero(texto, columna):
+    try:
+        return int(texto)
+    except ValueError:
+        raise ValueError(f"columna {columna}: '{texto}' no es un número entero")
 
 
 class ArchivoCSV(models.Model):
@@ -66,7 +72,7 @@ class ArchivoCSV(models.Model):
             self.tamano_bytes = self.archivo.size
         super().save(*args, **kwargs)
 
-    # Lectura y validación del archivo 
+    # ---------- Lectura y validación del archivo ----------
     def _leer_filas(self):
         """Lee el CSV aceptando UTF-8 o Latin-1 y separador ; o ,"""
         with self.archivo.open("rb") as f:
@@ -98,45 +104,60 @@ class ArchivoCSV(models.Model):
         filas = self._leer_filas()
         return {"encabezado": filas[0], "filas": filas[1:cantidad + 1]}
 
-    # Procesamiento 
+    # ---------- Procesamiento ----------
     def _validar_fila(self, fila, instrumentos, existentes, es_montos):
-        """Valida una fila en memoria. Devuelve sus datos listos para guardar o lanza ValueError."""
+        """Valida una fila en memoria e indica columna y motivo de cada error (HU-06 criterio 3)."""
         ejercicio, mercado, nemo, fecha, secuencia, dividendo, tipo_soc, valor_hist = [v.strip() for v in fila[:8]]
 
         instrumento = instrumentos.get(nemo)
         if instrumento is None:
-            raise ValueError(f"el instrumento {nemo} no existe")
+            raise ValueError(f"columna Instrumento: '{nemo}' no existe")
         if instrumento.emisor.mercado != mercado.upper():
-            raise ValueError(f"el mercado {mercado} no corresponde al del instrumento {nemo}")
+            raise ValueError(f"columna Mercado: '{mercado}' no corresponde al del instrumento {nemo}")
 
-        ejercicio, secuencia, dividendo = int(ejercicio), int(secuencia), int(dividendo)
+        ejercicio = _entero(ejercicio, "Ejercicio")
+        secuencia = _entero(secuencia, "Secuencia")
+        dividendo = _entero(dividendo, "N.º dividendo")
         if not 1900 <= ejercicio <= 2100:
-            raise ValueError(f"el ejercicio {ejercicio} no es válido")
+            raise ValueError(f"columna Ejercicio: {ejercicio} no es válido")
         if not 10001 <= secuencia <= SECUENCIA_MAXIMA:
-            raise ValueError("la secuencia de evento debe ser mayor a 10.000")
+            raise ValueError("columna Secuencia: debe ser mayor a 10.000")
         if dividendo < 0:
-            raise ValueError("el número de dividendo no puede ser negativo")
+            raise ValueError("columna N.º dividendo: no puede ser negativo")
         tipo_soc = tipo_soc.upper()
         if tipo_soc not in ("", "A", "C"):
-            raise ValueError("el tipo de sociedad debe ser A o C")
+            raise ValueError("columna Tipo sociedad: debe ser A o C")
+        try:
+            fecha_pago = datetime.strptime(fecha, "%d-%m-%Y").date()
+        except ValueError:
+            raise ValueError(f"columna Fecha: '{fecha}' debe tener el formato DD-MM-AAAA")
+        try:
+            valor_historico = _decimal(valor_hist)
+        except (ValueError, InvalidOperation):
+            raise ValueError(f"columna Valor histórico: '{valor_hist}' no es un número válido")
 
         llave = (instrumento.id, ejercicio, secuencia)
         existente = existentes.get(llave)
         if existente and existente.verificar_periodo_cerrado():
             raise ValueError("la calificación pertenece a un período cerrado y no se puede modificar")
 
-        valores = {columna: _decimal(v) for columna, v in zip(COLUMNAS, fila[8:])}
-        factores = calcular_factores_desde_montos(valores) if es_montos else valores
-        if not factores_validos(factores):
-            raise ValueError("los factores no cumplen las reglas: cada uno debe estar entre 0 y 1, "
-                             "y la suma de las columnas 8 a 19 no puede superar 1")
+        valores = {}
+        for columna, texto in zip(COLUMNAS, fila[8:]):
+            if es_montos:
+                try:
+                    valores[columna] = _decimal(texto)
+                except (ValueError, InvalidOperation):
+                    raise ValueError(f"columna {columna}: '{texto}' no es un monto válido")
+            else:
+                valores[columna] = leer_factor(texto, columna)  # HU-07: hasta 8 decimales
 
-        campos = {
-            "fecha_pago": datetime.strptime(fecha, "%d-%m-%Y").date(),
-            "numero_dividendo": dividendo,
-            "tipo_sociedad": tipo_soc,
-            "valor_historico": _decimal(valor_hist),
-        }
+        factores = calcular_factores_desde_montos(valores) if es_montos else valores
+        errores = errores_factores(factores)  # HU-05: indica qué factor falla
+        if errores:
+            raise ValueError("; ".join(errores))
+
+        campos = {"fecha_pago": fecha_pago, "numero_dividendo": dividendo,
+                  "tipo_sociedad": tipo_soc, "valor_historico": valor_historico}
         return llave, instrumento, existente, campos, valores, factores
 
     def procesar_lote(self, ip=None):
@@ -149,11 +170,12 @@ class ArchivoCSV(models.Model):
         filas = self._leer_filas()
         previsualizacion = filas[:11]  # encabezado + 10 filas
         if not (self.validar_tamano_maximo() and self.validar_formato(filas)):
-            errores = ["El archivo supera el tamaño permitido o no tiene las 38 columnas requeridas."]
+            errores = [f"El archivo supera el tamaño permitido ({settings.CSV_TAMANO_MAXIMO_MB} MB) "
+                       f"o no tiene las {COLUMNAS_ESPERADAS} columnas requeridas."]
             self.estado_carga = self.EstadoCarga.CON_ERRORES
             self.save()
-            guardar_resultado_carga(self, {"filas": len(filas) - 1, "validas": 0, "rechazadas": len(filas) - 1},
-                                    errores, previsualizacion)
+            guardar_resultado_carga(self, {"filas": max(len(filas) - 1, 0), "validas": 0,
+                                           "rechazadas": max(len(filas) - 1, 0)}, errores, previsualizacion)
             return errores
 
         datos = filas[1:]
@@ -210,15 +232,21 @@ class ArchivoCSV(models.Model):
                 por_llave = {(c.instrumento_id, c.ejercicio_comercial, c.secuencia_evento): c for c in
                              CalificacionTributaria.objects.filter(corredora=corredora, archivo_origen=self)}
 
-                # 4. Factores: se reemplazan completos (composición 1 → 30)
+                # 4. Factores: se reemplazan completos (composición 1 → 30), en bloques para cuidar la memoria
                 FactorTributario.objects.filter(calificacion__in=actualizadas).delete()
-                FactorTributario.objects.bulk_create([
-                    FactorTributario(calificacion=por_llave[llave], columna=columna,
-                                     monto_financiero=valores[columna] if es_montos else Decimal("0"),
-                                     factor_calculado=factores[columna])
-                    for llave, _, _, _, valores, factores in validas
-                    for columna in COLUMNAS
-                ], batch_size=LOTE_BD)
+                lote = []
+                for llave, _, _, _, valores, factores in validas:
+                    calificacion = por_llave[llave]
+                    for columna in COLUMNAS:
+                        lote.append(FactorTributario(
+                            calificacion=calificacion, columna=columna,
+                            monto_financiero=valores[columna] if es_montos else Decimal("0"),
+                            factor_calculado=factores[columna]))
+                    if len(lote) >= LOTE_BD:
+                        FactorTributario.objects.bulk_create(lote, batch_size=LOTE_BD)
+                        lote = []
+                if lote:
+                    FactorTributario.objects.bulk_create(lote, batch_size=LOTE_BD)
 
                 # 5. Bitácora en MySQL, en la misma transacción
                 BitacoraAuditoria.registrar_evento(
@@ -245,5 +273,6 @@ class ArchivoCSV(models.Model):
                                        "rechazadas": self.filas_rechazadas, "creadas": len(nuevas),
                                        "actualizadas": len(actualizadas)}, errores, previsualizacion)
         return errores
+
     def __str__(self):
         return f"{self.nombre_archivo} ({self.get_estado_carga_display()})"

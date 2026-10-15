@@ -1,0 +1,50 @@
+<!-- MODAL MODIFICAR -->
+<div class="modal fade" id="modalModificar" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content border-secondary shadow-lg">
+            <div class="modal-header py-2 bg-light">
+                <h6 class="modal-title text-primary fw-bold mb-0">Modificar Calificación Tributaria</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-3" style="font-size: 0.78rem;">
+                <form id="formModificar">
+                    <div class="row g-2 mb-3 bg-light p-2 border rounded">
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center mb-1"><span class="w-40 fw-semibold">Mercado:</span><input type="text" name="mercado" class="form-control form-control-sm"></div>
+                            <div class="d-flex align-items-center mb-1"><span class="w-40 fw-semibold">Fecha Pago:</span><input type="text" name="fecha_pago" class="form-control form-control-sm"></div>
+                            <div class="d-flex align-items-center"><span class="w-40 fw-semibold">Secuencia Evento:</span><input type="text" name="secuencia_evento" class="form-control form-control-sm"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center mb-1"><span class="w-40 fw-semibold">Instrumento:</span><input type="text" name="instrumento" class="form-control form-control-sm"></div>
+                            <div class="d-flex align-items-center mb-1"><span class="w-40 fw-semibold">Evento Capital:</span><input type="text" name="evento_capital" class="form-control form-control-sm"></div>
+                            <div class="d-flex align-items-center"><span class="w-40 fw-semibold">Año:</span><input type="text" name="ejercicio" class="form-control form-control-sm"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center mb-1"><span class="w-40 fw-semibold">Valor Histórico:</span><input type="text" name="valor_historico" class="form-control form-control-sm"></div>
+                            <div class="d-flex align-items-center"><span class="w-40 fw-semibold">Descripción:</span><input type="text" name="descripcion" class="form-control form-control-sm"></div>
+                        </div>
+                    </div>
+
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <div class="mb-1"><label class="form-label mb-0 small">Factor-08</label><input type="text" name="f08" class="form-control form-control-sm" value="0,00000000"></div>
+                            <div class="mb-1"><label class="form-label mb-0 small">Factor-11</label><input type="text" name="f11" class="form-control form-control-sm" value="0,00000000"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-1"><label class="form-label mb-0 small">Factor-09</label><input type="text" name="f09" class="form-control form-control-sm" value="0,00000000"></div>
+                            <div class="mb-1"><label class="form-label mb-0 small">Factor-12</label><input type="text" name="f12" class="form-control form-control-sm" value="0,00000000"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-1"><label class="form-label mb-0 small">Factor-10</label><input type="text" name="f10" class="form-control form-control-sm" value="0,00000000"></div>
+                            <div class="mb-1"><label class="form-label mb-0 small">Factor-13</label><input type="text" name="f13" class="form-control form-control-sm" value="0,00000000"></div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer justify-content-end py-2">
+                <button type="button" class="btn btn-sm btn-outline-primary px-4" id="btnGuardarModificacion">GUARDAR</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary px-3" data-bs-dismiss="modal">CANCELAR</button>
+            </div>
+        </div>
+    </div>
+</div>
