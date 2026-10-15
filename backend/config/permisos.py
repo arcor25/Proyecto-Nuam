@@ -23,3 +23,22 @@ class LecturaAutenticadaEscrituraAdminTI(BasePermission):
         if not (request.user and request.user.is_authenticated):
             return False
         return request.method in SAFE_METHODS or request.user.rol == "ADMIN_TI"
+
+
+class LecturaAutenticadaEscrituraCorredor(BasePermission):
+    """Consultar: cualquier usuario autenticado. Ingresar, modificar o eliminar: solo el corredor,
+    y solo calificaciones de su propia corredora."""
+    message = "Solo un corredor de bolsa puede ingresar, modificar o eliminar calificaciones."
+
+    def has_permission(self, request, view):
+        if not (request.user and request.user.is_authenticated):
+            return False
+        return request.method in SAFE_METHODS or request.user.rol == "CORREDOR"
+
+    def has_object_permission(self, request, view, obj):
+        if request.method in SAFE_METHODS:
+            return True
+        if obj.corredora_id != request.user.corredora_id:
+            self.message = "Solo puede modificar calificaciones de su corredora. Para una de Bolsa, use Copiar."
+            return False
+        return True

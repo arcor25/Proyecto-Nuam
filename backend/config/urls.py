@@ -30,6 +30,7 @@ from rest_framework.routers import DefaultRouter
 
 from calificaciones.api import EmisorViewSet, InstrumentoViewSet
 
+from calificaciones.api import CalificacionViewSet, EmisorViewSet, InstrumentoViewSet
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
@@ -40,7 +41,7 @@ router = DefaultRouter()
 router.register("emisores", EmisorViewSet, basename="emisor")
 router.register("instrumentos", InstrumentoViewSet, basename="instrumento")
 
-
+router.register("calificaciones", CalificacionViewSet, basename="calificacion")
 
 urlpatterns = [
     path("admin/", admin.site.urls),
