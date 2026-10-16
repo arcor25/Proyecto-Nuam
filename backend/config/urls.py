@@ -34,6 +34,12 @@ from calificaciones.api import CalificacionViewSet, EmisorViewSet, InstrumentoVi
 
 from cargas.api import ArchivoCSVViewSet
 
+from usuarios.views import login_web, logout_web
+
+from django.shortcuts import redirect
+
+from rectificaciones.api import SolicitudRectificacionViewSet
+
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def health(request):
@@ -47,7 +53,10 @@ router.register("calificaciones", CalificacionViewSet, basename="calificacion")
 
 router.register("cargas", ArchivoCSVViewSet, basename="carga")
 
+router.register("rectificaciones", SolicitudRectificacionViewSet, basename="rectificacion")
+
 urlpatterns = [
+    path("", lambda request: redirect("/login/")),
     path("admin/", admin.site.urls),
     path("api/health/", health),
     path("api/auth/login/", LoginView.as_view()),
@@ -57,4 +66,6 @@ urlpatterns = [
     path("calificaciones/", mantenedor, name="mantenedor"),
     path("api/", include(router.urls)),
     path("api-auth/", include("rest_framework.urls")),  # login para probar la API con usuarios que no son del admin
+    path("login/", login_web, name="login"),
+    path("logout/", logout_web, name="logout"),
 ]

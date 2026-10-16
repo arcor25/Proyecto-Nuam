@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+{% load static %}
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -15,96 +16,71 @@
             <h5 class="fw-bold mb-0" style="color: #1B4965;">
                 Calificaciones Tributarias
             </h5>
-            <div>
-                <button class="btn btn-sm btn-link text-decoration-none text-secondary pe-1">—</button>
-                <button class="btn btn-sm btn-link text-decoration-none text-secondary">✕</button>
+            <div class="d-flex align-items-center gap-2">
+                <span class="small text-muted">{{ request.user.email }}</span>
+                <form method="post" action="{% url 'logout' %}" class="m-0">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-outline-secondary">CERRAR SESIÓN</button>
+                </form>
             </div>
         </div>
 
         <!-- FILTROS -->
         <div class="row g-2 align-items-center mb-2">
-            <div class="col-auto"><label class="form-label mb-0 small">Mercado</label></div>
+            <div class="col-auto"><label for="filtroMercado" class="form-label mb-0 small">Mercado</label></div>
             <div class="col-md-2">
                 <select id="filtroMercado" class="form-select form-select-sm">
-                    <option value="ACCIONES">ACCIONES</option>
-                    <option value="BONOS">BONOS</option>
+                    <option value="ACN" selected>Acciones (ACN)</option>
+                    <option value="CFI">Cuotas de fondos (CFI)</option>
+                    <option value="FM">Fondos mutuos (FM)</option>
                 </select>
             </div>
 
-            <div class="col-auto ms-2"><label class="form-label mb-0 small">Origen</label></div>
+            <div class="col-auto ms-2"><label for="filtroOrigen" class="form-label mb-0 small">Origen</label></div>
             <div class="col-md-2">
                 <select id="filtroOrigen" class="form-select form-select-sm">
                     <option value="">TODOS</option>
                     <option value="CORREDOR">CORREDOR</option>
-                    <option value="BOLSA">BOLSA</option>
+                    <option value="SISTEMA">BOLSA</option>
                 </select>
             </div>
 
-            <div class="col-auto ms-2"><label class="form-label mb-0 small">Periodo Comercial</label></div>
+            <div class="col-auto ms-2"><label for="filtroPeriodo" class="form-label mb-0 small">Periodo Comercial</label></div>
             <div class="col-md-2">
                 <select id="filtroPeriodo" class="form-select form-select-sm">
-                    <option value="2025" selected>2025</option>
+                    <option value="2026" selected>2026</option>
+                    <option value="2025">2025</option>
                     <option value="2024">2024</option>
                 </select>
             </div>
 
             <div class="col-md-2 ms-auto text-end">
-                <button id="btnBuscar" class="btn btn-sm w-100 mb-1 text-white fw-bold" style="background-color: #1C4E80;">
-                    🔍 BUSCAR
-                </button>
-                <button id="btnLimpiar" class="btn btn-sm btn-outline-secondary w-100">
-                    LIMPIAR
-                </button>
+                <button id="btnBuscar" type="button" class="btn btn-sm w-100 mb-1 text-white fw-bold" style="background-color: #1C4E80;">🔍 BUSCAR</button>
+                <button id="btnLimpiar" type="button" class="btn btn-sm btn-outline-secondary w-100">LIMPIAR</button>
             </div>
         </div>
 
         <div class="form-check mb-3">
             <input type="checkbox" class="form-check-input" id="chkPendiente">
-            <label class="form-check-label small" for="chkPendiente">
-                Calificación Pendiente
-            </label>
+            <label class="form-check-label small" for="chkPendiente">Calificación Pendiente</label>
         </div>
 
         <!-- TABLA DE RESULTADOS -->
+        <div id="mensajeMantenedor" class="alert d-none py-2 small" role="alert"></div>
         <div class="table-responsive border rounded" style="max-height: 380px;">
             <table class="table table-sm table-bordered table-hover mb-0 text-nowrap align-middle" style="font-size: 0.8rem;">
-                <thead class="table-light sticky-top">
-                    <tr>
-                        <th>Ejercicio</th>
-                        <th>Instrumento ⚙️</th>
-                        <th>Fecha Pago 📅</th>
-                        <th>Descripción</th>
-                        <th>Secuencia Evento</th>
-                        <th>Valor Histórico</th>
-                        <th>Factor-08</th>
-                        <th>Factor-09</th>
-                        <th>Factor-10</th>
-                        <th>Factor-11</th>
-                        <th>Factor-12</th>
-                    </tr>
-                </thead>
-                <tbody id="tablaDatosBody">
-                    <tr>
-                        <td colspan="11" class="text-center text-muted py-4">
-                            No hay registros disponibles. Utilice la barra de búsqueda o cargue un archivo.
-                        </td>
-                    </tr>
-                </tbody>
+                <thead id="cabeceraResultados" class="table-light sticky-top"></thead>
+                <tbody id="tablaDatosBody"></tbody>
             </table>
         </div>
 
         <!-- PAGINACIÓN / CONTADOR -->
         <div class="d-flex justify-content-between align-items-center mt-2 px-1">
             <div class="btn-group btn-group-sm">
-                <button class="btn btn-outline-secondary">«</button>
-                <button class="btn btn-outline-secondary">‹</button>
-                <button class="btn btn-primary active">1</button>
-                <button class="btn btn-outline-secondary">›</button>
-                <button class="btn btn-outline-secondary">»</button>
+                <button id="btnAnterior" type="button" class="btn btn-outline-secondary" disabled>‹ Anterior</button>
+                <button id="btnSiguiente" type="button" class="btn btn-outline-secondary" disabled>Siguiente ›</button>
             </div>
-            <span class="text-muted small" id="contadorElementos">
-                Elementos mostrados 0 de 0
-            </span>
+            <span class="text-muted small" id="contadorElementos">Elementos mostrados 0 de 0</span>
         </div>
 
         <!-- BOTONES DE ACCIONES -->
@@ -114,14 +90,14 @@
                     INGRESAR
                 </button>
 
-                <button id="btnModificar" class="btn btn-sm btn-outline-secondary px-3" disabled data-bs-toggle="modal" data-bs-target="#modalModificar">
+                <button id="btnModificar" class="btn btn-sm btn-outline-secondary px-3">
                     MODIFICAR
                 </button>
 
-                <button class="btn btn-sm btn-outline-secondary px-3" disabled>
+                <button id="btnEliminar" class="btn btn-sm btn-outline-secondary px-3" disabled>
                     ELIMINAR
                 </button>
-                <button class="btn btn-sm btn-outline-secondary px-3" disabled>
+                <button id="btnCopiar" class="btn btn-sm btn-outline-secondary px-3" disabled>
                     COPIAR
                 </button>
 
@@ -132,14 +108,144 @@
                 <button class="btn btn-sm btn-outline-primary px-3" data-bs-toggle="modal" data-bs-target="#modalCargaMonto">
                     CARGA X MONTO
                 </button>
+
+                <button id="btnSolicitarRect" class="btn btn-sm btn-outline-secondary px-3" disabled>
+                    SOLICITAR RECTIFICACIÓN
+                </button>
+                
             </div>
 
             <div>
                 <button class="btn btn-sm btn-outline-primary px-4">
                     OPCIONES
                 </button>
+                <button id="btnMisRect" class="btn btn-sm btn-outline-primary px-3">
+                    MIS RECTIFICACIONES
+                </button>
+                <button id="btnPendientesRect" class="btn btn-sm btn-outline-warning px-3 d-none">
+                    SOLICITUDES PENDIENTES
+                </button>
             </div>
         </div>
+        <div class="modal fade" id="modalCopiar" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header py-2">
+                        <h6 class="modal-title fw-bold mb-0">Copiar calificación</h6>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <label for="copiaSecuencia" class="form-label small">Secuencia de evento para la copia (mayor a 10.000)</label>
+                        <input id="copiaSecuencia" type="number" min="10001" step="1" class="form-control form-control-sm">
+                        <div id="copiaMensaje" class="alert alert-danger d-none py-1 small mt-2 mb-0" role="alert"></div>
+                    </div>
+                    <div class="modal-footer py-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">CANCELAR</button>
+                        <button type="button" class="btn btn-sm text-white fw-bold" style="background-color: #1C4E80;" id="btnConfirmarCopia">COPIAR</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <!-- MODAL SOLICITAR RECTIFICACIÓN -->
+    <div class="modal fade" id="modalSolicitarRect" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header py-2">
+                    <h6 class="modal-title fw-bold mb-0">Solicitar rectificación</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="small mb-2" id="rectResumen"></p>
+                    <label for="rectMotivo" class="form-label small fw-semibold">Motivo de la rectificación</label>
+                    <textarea id="rectMotivo" class="form-control form-control-sm mb-3" rows="2" maxlength="500"></textarea>
+
+                    <div class="row g-2">
+                        <div class="col-md-3"><label for="rectCol" class="form-label small">Columna (8 a 37)</label><input id="rectCol" type="number" min="8" max="37" class="form-control form-control-sm"></div>
+                        <div class="col-md-3"><label for="rectFactor" class="form-label small">Factor propuesto</label><input id="rectFactor" type="text" class="form-control form-control-sm" inputmode="decimal"></div>
+                        <div class="col-md-3 d-flex align-items-end"><button id="btnAgregarFactorRect" type="button" class="btn btn-sm btn-outline-primary w-100">Agregar</button></div>
+                    </div>
+                    <ul id="rectListaFactores" class="small mt-2 mb-0 ps-3"></ul>
+                    <div id="rectMensajes" class="alert alert-danger d-none py-1 small mt-2 mb-0" role="alert"></div>
+                </div>
+                <div class="modal-footer py-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">CANCELAR</button>
+                    <button type="button" class="btn btn-sm text-white fw-bold" style="background-color: #1C4E80;" id="btnEnviarRect">ENVIAR SOLICITUD</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL MIS RECTIFICACIONES -->
+    <div class="modal fade" id="modalMisRect" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header py-2">
+                    <h6 class="modal-title fw-bold mb-0">Mis rectificaciones</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-responsive border rounded" style="max-height: 360px;">
+                        <table class="table table-sm table-hover mb-0 align-middle" style="font-size: 0.8rem;">
+                            <thead class="table-light sticky-top">
+                                <tr><th>Fecha</th><th>Instrumento</th><th>Secuencia</th><th>Motivo</th><th>Estado</th><th>Observación</th></tr>
+                            </thead>
+                            <tbody id="tablaMisRect"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer py-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">CERRAR</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL SOLICITUDES PENDIENTES (SUPERVISOR) -->
+    <div class="modal fade" id="modalPendientesRect" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header py-2">
+                    <h6 class="modal-title fw-bold mb-0">Solicitudes de rectificación pendientes</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="pendientesMensajes" class="alert alert-danger d-none py-1 small mb-2" role="alert"></div>
+                    <div class="table-responsive border rounded" style="max-height: 420px;">
+                        <table class="table table-sm table-bordered mb-0 align-middle" style="font-size: 0.8rem;">
+                            <thead class="table-light sticky-top">
+                                <tr><th>Corredor</th><th>Calificación</th><th>Original</th><th>Propuesto</th><th>Motivo</th><th>Acción</th></tr>
+                            </thead>
+                            <tbody id="tablaPendientesRect"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer py-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">CERRAR</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL RECHAZAR RECTIFICACIÓN (SUPERVISOR) -->
+    <div class="modal fade" id="modalRechazarRect" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header py-2">
+                    <h6 class="modal-title fw-bold mb-0">Rechazar rectificación</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <label for="rechazoObservacion" class="form-label small fw-semibold">Motivo del rechazo (obligatorio)</label>
+                    <textarea id="rechazoObservacion" class="form-control form-control-sm" rows="3" maxlength="500"></textarea>
+                    <div id="rechazoMensaje" class="alert alert-danger d-none py-1 small mt-2 mb-0" role="alert"></div>
+                </div>
+                <div class="modal-footer py-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">CANCELAR</button>
+                    <button type="button" class="btn btn-sm btn-danger fw-bold" id="btnConfirmarRechazo">RECHAZAR</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     </div>
 
@@ -149,227 +255,11 @@
     {% include "calificaciones/modales/carga_factor.html" %}
     {% include "calificaciones/modales/carga_monto.html" %}
 
-    <!-- Bootstrap 5 JS Bundle -->
+    <!-- Bootstrap 5 JS Bundle -->   
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- SCRIPT UNIFICADO: API FETCH (BÚSQUEDA Y ACCIONES DE MODALES) -->
     <script>
-        // ==========================================
-        // 1. EVENTO BUSCAR (Consumo de la API REST)
-        // ==========================================
-        document.getElementById('btnBuscar').addEventListener('click', async () => {
-            const mercado = document.getElementById('filtroMercado').value;
-            const periodo = document.getElementById('filtroPeriodo').value;
-            const origen = document.getElementById('filtroOrigen').value;
-
-            const token = localStorage.getItem('access_token'); 
-
-            try {
-                const response = await fetch(`/api/calificaciones/?mercado=${mercado}&periodo=${periodo}&origen=${origen}`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': token ? `Bearer ${token}` : '',
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                if (!response.ok) {
-                    if (response.status === 401) {
-                        alert('Su sesión ha expirado o no está autorizado. Inicie sesión nuevamente.');
-                        window.location.href = '/api/auth/login/';
-                        return;
-                    }
-                    throw new Error('Error al obtener los datos del servidor.');
-                }
-
-                const datos = await response.json();
-                const tbody = document.getElementById('tablaDatosBody');
-                const contador = document.getElementById('contadorElementos');
-                tbody.innerHTML = '';
-
-                if (datos.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="11" class="text-center text-muted py-4">No hay registros disponibles para los filtros seleccionados.</td></tr>`;
-                    contador.textContent = `Elementos mostrados 0 de 0`;
-                    return;
-                }
-
-                datos.forEach((item) => {
-                    let getFactor = (col) => item.factores.find(f => f.columna === col)?.factor_calculado || '0,00000000';
-
-                    let f08 = getFactor(8);
-                    let f09 = getFactor(9);
-                    let f10 = getFactor(10);
-                    let f11 = getFactor(11);
-                    let f12 = getFactor(12);
-
-                    tbody.innerHTML += `
-                        <tr style="cursor: pointer;" onclick="seleccionarFila(this, ${item.id})">
-                            <td class="text-center">${item.ejercicio_comercial}</td>
-                            <td class="fw-semibold">${item.instrumento_nemo || item.instrumento}</td>
-                            <td class="text-center">${item.fecha_pago}</td>
-                            <td>${item.descripcion || '-'}</td>
-                            <td class="text-end">${item.secuencia_evento}</td>
-                            <td class="text-end">${item.valor_historico || '0'}</td>
-                            <td class="text-end">${f08}</td>
-                            <td class="text-end">${f09}</td>
-                            <td class="text-end">${f10}</td>
-                            <td class="text-end">${f11}</td>
-                            <td class="text-end">${f12}</td>
-                        </tr>
-                    `;
-                });
-
-                contador.textContent = `Elementos mostrados ${datos.length} de ${datos.length}`;
-
-            } catch (error) {
-                console.error("Error en la petición:", error);
-                alert("Ocurrió un error al cargar las calificaciones.");
-            }
-        });
-
-        // ==========================================
-        // 2. SELECCIÓN DE FILA EN LA TABLA
-        // ==========================================
-        function seleccionarFila(trElement, id) {
-            document.querySelectorAll('#tablaDatosBody tr').forEach(tr => tr.classList.remove('table-active'));
-            trElement.classList.add('table-active');
-            
-            const btnModificar = document.getElementById('btnModificar');
-            if (btnModificar) {
-                btnModificar.removeAttribute('disabled');
-            }
-            
-            window.calificacionSeleccionadaId = id;
-        }
-
-        // ==========================================
-        // 3. LIMPIAR FILTROS
-        // ==========================================
-        document.getElementById('btnLimpiar')?.addEventListener('click', () => {
-            document.getElementById('filtroMercado').value = 'ACCIONES';
-            document.getElementById('filtroOrigen').value = '';
-            document.getElementById('filtroPeriodo').value = '2025';
-            document.getElementById('chkPendiente').checked = false;
-            document.getElementById('tablaDatosBody').innerHTML = `<tr><td colspan="11" class="text-center text-muted py-4">No hay registros disponibles. Utilice la barra de búsqueda o cargue un archivo.</td></tr>`;
-            document.getElementById('contadorElementos').textContent = `Elementos mostrados 0 de 0`;
-        });
-
-        // ==========================================
-        // 4. ACCIONES DE MODALES (INGRESO Y CARGAS MASIVAS)
-        // ==========================================
-
-        // A. Grabar Ingreso Manual
-        document.getElementById('btnGrabarIngreso')?.addEventListener('click', async () => {
-            const form = document.getElementById('formIngreso');
-            if (!form) return;
-
-            const formData = new FormData(form);
-            const data = Object.fromEntries(formData.entries());
-            data.ingreso_montos = form.querySelector('[name="ingreso_montos"]')?.checked || false;
-
-            const token = localStorage.getItem('access_token');
-
-            try {
-                const response = await fetch('/api/calificaciones/', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': token ? `Bearer ${token}` : '',
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                });
-
-                if (response.ok) {
-                    alert('¡Calificación ingresada con éxito!');
-                    const modalEl = document.getElementById('modalIngreso');
-                    const modal = bootstrap.Modal.getInstance(modalEl);
-                    if (modal) modal.hide();
-                    document.getElementById('btnBuscar').click();
-                } else {
-                    const err = await response.json();
-                    alert('Error al guardar: ' + JSON.stringify(err));
-                }
-            } catch (error) {
-                console.error('Error de red al registrar:', error);
-                alert('Ocurrió un error al intentar guardar el registro.');
-            }
-        });
-
-        // B. Carga Masiva por Factor
-        document.getElementById('btnGrabarFactor')?.addEventListener('click', async () => {
-            const fileInput = document.getElementById('inputFileFactor');
-            if (!fileInput || fileInput.files.length === 0) {
-                alert('Por favor seleccione un archivo para cargar.');
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('archivo', fileInput.files[0]);
-            formData.append('formato_tipo', 'FACTORES');
-
-            const token = localStorage.getItem('access_token');
-
-            try {
-                const response = await fetch('/api/cargas/', {
-                    method: 'POST',
-                    headers: { 'Authorization': token ? `Bearer ${token}` : '' },
-                    body: formData
-                });
-
-                const resultado = await response.json();
-
-                if (response.ok) {
-                    alert(`¡Archivo procesado con éxito! Filas válidas: ${resultado.filas_validas}`);
-                    const modalEl = document.getElementById('modalCargaFactor');
-                    const modal = bootstrap.Modal.getInstance(modalEl);
-                    if (modal) modal.hide();
-                    document.getElementById('btnBuscar').click();
-                } else {
-                    alert(`El archivo se procesó con errores. Filas rechazadas: ${resultado.filas_rechazadas || 0}.`);
-                }
-            } catch (error) {
-                console.error('Error al subir el archivo:', error);
-                alert('Error de conexión al procesar el archivo masivo.');
-            }
-        });
-
-        // C. Carga Masiva por Monto
-        document.getElementById('btnGrabarMonto')?.addEventListener('click', async () => {
-            const fileInput = document.getElementById('inputFileMonto');
-            if (!fileInput || fileInput.files.length === 0) {
-                alert('Por favor seleccione un archivo de montos.');
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('archivo', fileInput.files[0]);
-            formData.append('formato_tipo', 'MONTOS');
-
-            const token = localStorage.getItem('access_token');
-
-            try {
-                const response = await fetch('/api/cargas/', {
-                    method: 'POST',
-                    headers: { 'Authorization': token ? `Bearer ${token}` : '' },
-                    body: formData
-                });
-
-                const resultado = await response.json();
-
-                if (response.ok) {
-                    alert(`¡Carga por montos procesada con éxito! Filas válidas: ${resultado.filas_validas}`);
-                    const modalEl = document.getElementById('modalCargaMonto');
-                    const modal = bootstrap.Modal.getInstance(modalEl);
-                    if (modal) modal.hide();
-                    document.getElementById('btnBuscar').click();
-                } else {
-                    alert(`Error en la carga por montos. Filas rechazadas: ${resultado.filas_rechazadas || 0}.`);
-                }
-            } catch (error) {
-                console.error('Error al subir el archivo de montos:', error);
-                alert('Error de conexión al procesar el archivo.');
-            }
-        });
+        window.usuarioActual = { rol: "{{ request.user.rol }}" };
     </script>
+    <script src="{% static 'js/mantenedor.js' %}"></script>
 </body>
 </html>

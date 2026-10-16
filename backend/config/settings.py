@@ -123,7 +123,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Santiago'
 
 USE_I18N = True
 
@@ -201,4 +201,11 @@ CSRF_TRUSTED_ORIGINS = [o.strip() for o in os.getenv("CSRF_TRUSTED_ORIGINS", "ht
 FACTOR_SUMA_DESDE = int(os.getenv("FACTOR_SUMA_DESDE", "8"))
 FACTOR_SUMA_HASTA = int(os.getenv("FACTOR_SUMA_HASTA", "19"))
 
-LOGIN_URL = "/admin/login/"
+LOGIN_URL = "/login/"
+
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+SESSION_COOKIE_AGE = 1800
+SESSION_SAVE_EVERY_REQUEST = True
+
+STATICFILES_DIRS = [BASE_DIR / "static"]

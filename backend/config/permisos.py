@@ -42,3 +42,19 @@ class LecturaAutenticadaEscrituraCorredor(BasePermission):
             self.message = "Solo puede modificar calificaciones de su corredora. Para una de Bolsa, use Copiar."
             return False
         return True
+
+
+class PermisoRectificacion(BasePermission):
+    """Lectura: usuarios autenticados. Crear: solo corredor. Aprobar o rechazar: solo supervisor."""
+    message = "Su rol no puede realizar esta acción sobre rectificaciones."
+
+    def has_permission(self, request, view):
+        if not (request.user and request.user.is_authenticated):
+            return False
+        if request.method in SAFE_METHODS:
+            return True
+        if view.action == "create":
+            return request.user.rol == "CORREDOR"
+        if view.action in ("aprobar", "rechazar"):
+            return request.user.rol == "SUPERVISOR"
+        return False

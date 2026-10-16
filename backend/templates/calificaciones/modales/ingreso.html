@@ -92,45 +92,165 @@
                         ingrese montos y presione «Calcular factores».
                     </p>
 
-                    <!-- GRILLA DE FACTORES 8 A 37 (3 COLUMNAS × 10) -->
+                    <!-- GRILLA DE MONTOS Y FACTORES 8 A 37 (3 COLUMNAS × 10) -->
                     <div class="row g-2">
                         <div class="col-md-4">
-                            <div class="mb-1"><label for="f08" class="form-label mb-0 small">Factor-08 No Constitutiva Renta No Acogido Impto.</label><input id="f08" type="text" name="f08" class="form-control form-control-sm" inputmode="decimal"></div>
-                            <div class="mb-1"><label for="f11" class="form-label mb-0 small">Factor-11 Incremento Impuesto 1ra Categoría</label><input id="f11" type="text" name="f11" class="form-control form-control-sm" inputmode="decimal"></div>
-                            <div class="mb-1"><label for="f14" class="form-label mb-0 small">Factor-14 Impto. 1ra Categ. Exento GI. Comp. Sin Devolución</label><input id="f14" type="text" name="f14" class="form-control form-control-sm" inputmode="decimal"></div>
-                            <div class="mb-1"><label for="f17" class="form-label mb-0 small">Factor-17 No Constitutiva Renta Devolución Capital Art.17</label><input id="f17" type="text" name="f17" class="form-control form-control-sm" inputmode="decimal"></div>
-                            <div class="mb-1"><label for="f20" class="form-label mb-0 small">Factor-20 Sin Derecho a Devolución</label><input id="f20" type="text" name="f20" class="form-control form-control-sm" inputmode="decimal"></div>
-                            <div class="mb-1"><label for="f23" class="form-label mb-0 small">Factor-23 Con Derecho a Devolución</label><input id="f23" type="text" name="f23" class="form-control form-control-sm" inputmode="decimal"></div>
-                            <div class="mb-1"><label for="f26" class="form-label mb-0 small">Factor-26 Sin Derecho a Devolución</label><input id="f26" type="text" name="f26" class="form-control form-control-sm" inputmode="decimal"></div>
-                            <div class="mb-1"><label for="f29" class="form-label mb-0 small">Factor-29 Sin Derecho a Devolución</label><input id="f29" type="text" name="f29" class="form-control form-control-sm" inputmode="decimal"></div>
-                            <div class="mb-1"><label for="f32" class="form-label mb-0 small">Factor-32 Con Derecho a Devolución</label><input id="f32" type="text" name="f32" class="form-control form-control-sm" inputmode="decimal"></div>
-                            <div class="mb-1"><label for="f35" class="form-label mb-0 small">Factor-35 Tasa Efectiva Del Cred. Del FUT (TEF)</label><input id="f35" type="text" name="f35" class="form-control form-control-sm" inputmode="decimal"></div>
+                            <div class="border rounded p-2 mb-2 bg-white" title="Factor-08 No Constitutiva Renta No Acogido Impto.">
+                                <div class="fw-semibold small text-primary mb-1">Columna 08</div>
+                                <div class="campo-monto"><label for="m08" class="form-label mb-0 small text-muted">Monto</label><input id="m08" type="text" name="m08" class="form-control form-control-sm" inputmode="decimal"></div>
+                                <div class="campo-factor"><label for="f08" class="form-label mb-0 small text-muted">Factor</label><input id="f08" type="text" name="f08" class="form-control form-control-sm" inputmode="decimal"></div>
+                            </div>
+                            <div class="border rounded p-2 mb-2 bg-white" title="Factor-11 Incremento Impuesto 1ra Categoría">
+                                <div class="fw-semibold small text-primary mb-1">Columna 11</div>
+                                <div class="campo-monto"><label for="m11" class="form-label mb-0 small text-muted">Monto</label><input id="m11" type="text" name="m11" class="form-control form-control-sm" inputmode="decimal"></div>
+                                <div class="campo-factor"><label for="f11" class="form-label mb-0 small text-muted">Factor</label><input id="f11" type="text" name="f11" class="form-control form-control-sm" inputmode="decimal"></div>
+                            </div>
+                            <div class="border rounded p-2 mb-2 bg-white" title="Factor-14 Impto. 1ra Categ. Exento GI. Comp. Sin Devolución">
+                                <div class="fw-semibold small text-primary mb-1">Columna 14</div>
+                                <div class="campo-monto"><label for="m14" class="form-label mb-0 small text-muted">Monto</label><input id="m14" type="text" name="m14" class="form-control form-control-sm" inputmode="decimal"></div>
+                                <div class="campo-factor"><label for="f14" class="form-label mb-0 small text-muted">Factor</label><input id="f14" type="text" name="f14" class="form-control form-control-sm" inputmode="decimal"></div>
+                            </div>
+                            <div class="border rounded p-2 mb-2 bg-white" title="Factor-17 No Constitutiva Renta Devolución Capital Art.17">
+                                <div class="fw-semibold small text-primary mb-1">Columna 17</div>
+                                <div class="campo-monto"><label for="m17" class="form-label mb-0 small text-muted">Monto</label><input id="m17" type="text" name="m17" class="form-control form-control-sm" inputmode="decimal"></div>
+                                <div class="campo-factor"><label for="f17" class="form-label mb-0 small text-muted">Factor</label><input id="f17" type="text" name="f17" class="form-control form-control-sm" inputmode="decimal"></div>
+                            </div>
+                            <div class="border rounded p-2 mb-2 bg-white" title="Factor-20 Sin Derecho a Devolución">
+                                <div class="fw-semibold small text-primary mb-1">Columna 20</div>
+                                <div class="campo-monto"><label for="m20" class="form-label mb-0 small text-muted">Monto</label><input id="m20" type="text" name="m20" class="form-control form-control-sm" inputmode="decimal"></div>
+                                <div class="campo-factor"><label for="f20" class="form-label mb-0 small text-muted">Factor</label><input id="f20" type="text" name="f20" class="form-control form-control-sm" inputmode="decimal"></div>
+                            </div>
+                            <div class="border rounded p-2 mb-2 bg-white" title="Factor-23 Con Derecho a Devolución">
+                                <div class="fw-semibold small text-primary mb-1">Columna 23</div>
+                                <div class="campo-monto"><label for="m23" class="form-label mb-0 small text-muted">Monto</label><input id="m23" type="text" name="m23" class="form-control form-control-sm" inputmode="decimal"></div>
+                                <div class="campo-factor"><label for="f23" class="form-label mb-0 small text-muted">Factor</label><input id="f23" type="text" name="f23" class="form-control form-control-sm" inputmode="decimal"></div>
+                            </div>
+                            <div class="border rounded p-2 mb-2 bg-white" title="Factor-26 Sin Derecho a Devolución">
+                                <div class="fw-semibold small text-primary mb-1">Columna 26</div>
+                                <div class="campo-monto"><label for="m26" class="form-label mb-0 small text-muted">Monto</label><input id="m26" type="text" name="m26" class="form-control form-control-sm" inputmode="decimal"></div>
+                                <div class="campo-factor"><label for="f26" class="form-label mb-0 small text-muted">Factor</label><input id="f26" type="text" name="f26" class="form-control form-control-sm" inputmode="decimal"></div>
+                            </div>
+                            <div class="border rounded p-2 mb-2 bg-white" title="Factor-29 Sin Derecho a Devolución">
+                                <div class="fw-semibold small text-primary mb-1">Columna 29</div>
+                                <div class="campo-monto"><label for="m29" class="form-label mb-0 small text-muted">Monto</label><input id="m29" type="text" name="m29" class="form-control form-control-sm" inputmode="decimal"></div>
+                                <div class="campo-factor"><label for="f29" class="form-label mb-0 small text-muted">Factor</label><input id="f29" type="text" name="f29" class="form-control form-control-sm" inputmode="decimal"></div>
+                            </div>
+                            <div class="border rounded p-2 mb-2 bg-white" title="Factor-32 Con Derecho a Devolución">
+                                <div class="fw-semibold small text-primary mb-1">Columna 32</div>
+                                <div class="campo-monto"><label for="m32" class="form-label mb-0 small text-muted">Monto</label><input id="m32" type="text" name="m32" class="form-control form-control-sm" inputmode="decimal"></div>
+                                <div class="campo-factor"><label for="f32" class="form-label mb-0 small text-muted">Factor</label><input id="f32" type="text" name="f32" class="form-control form-control-sm" inputmode="decimal"></div>
+                            </div>
+                            <div class="border rounded p-2 mb-2 bg-white" title="Factor-35 Tasa Efectiva Del Cred. Del FUT (TEF)">
+                                <div class="fw-semibold small text-primary mb-1">Columna 35</div>
+                                <div class="campo-monto"><label for="m35" class="form-label mb-0 small text-muted">Monto</label><input id="m35" type="text" name="m35" class="form-control form-control-sm" inputmode="decimal"></div>
+                                <div class="campo-factor"><label for="f35" class="form-label mb-0 small text-muted">Factor</label><input id="f35" type="text" name="f35" class="form-control form-control-sm" inputmode="decimal"></div>
+                            </div>
                         </div>
 
                         <div class="col-md-4">
-                            <div class="mb-1"><label for="f09" class="form-label mb-0 small">Factor-09 Impto. 1ra Categ. Afecto GI. Comp. Con Devolución</label><input id="f09" type="text" name="f09" class="form-control form-control-sm" inputmode="decimal"></div>
-                            <div class="mb-1"><label for="f12" class="form-label mb-0 small">Factor-12 Impto. 1ra Categ. Exento GI. Comp. Con Devolución</label><input id="f12" type="text" name="f12" class="form-control form-control-sm" inputmode="decimal"></div>
-                            <div class="mb-1"><label for="f15" class="form-label mb-0 small">Factor-15 Impto. Créditos por Impuestos Externos</label><input id="f15" type="text" name="f15" class="form-control form-control-sm" inputmode="decimal"></div>
-                            <div class="mb-1"><label for="f18" class="form-label mb-0 small">Factor-18 Rentas Exentas de Impto. GC y/o Impto. Adicional</label><input id="f18" type="text" name="f18" class="form-control form-control-sm" inputmode="decimal"></div>
-                            <div class="mb-1"><label for="f21" class="form-label mb-0 small">Factor-21 Con Derecho a Devolución</label><input id="f21" type="text" name="f21" class="form-control form-control-sm" inputmode="decimal"></div>
-                            <div class="mb-1"><label for="f24" class="form-label mb-0 small">Factor-24 Sin Derecho a Devolución</label><input id="f24" type="text" name="f24" class="form-control form-control-sm" inputmode="decimal"></div>
-                            <div class="mb-1"><label for="f27" class="form-label mb-0 small">Factor-27 Con Derecho a Devolución</label><input id="f27" type="text" name="f27" class="form-control form-control-sm" inputmode="decimal"></div>
-                            <div class="mb-1"><label for="f30" class="form-label mb-0 small">Factor-30 Con Derecho a Devolución</label><input id="f30" type="text" name="f30" class="form-control form-control-sm" inputmode="decimal"></div>
-                            <div class="mb-1"><label for="f33" class="form-label mb-0 small">Factor-33 Crédito por IPE</label><input id="f33" type="text" name="f33" class="form-control form-control-sm" inputmode="decimal"></div>
-                            <div class="mb-1"><label for="f36" class="form-label mb-0 small">Factor-36 Tasa Efectiva Del Cred. Del FUNT (TEX)</label><input id="f36" type="text" name="f36" class="form-control form-control-sm" inputmode="decimal"></div>
+                            <div class="border rounded p-2 mb-2 bg-white" title="Factor-09 Impto. 1ra Categ. Afecto GI. Comp. Con Devolución">
+                                <div class="fw-semibold small text-primary mb-1">Columna 09</div>
+                                <div class="campo-monto"><label for="m09" class="form-label mb-0 small text-muted">Monto</label><input id="m09" type="text" name="m09" class="form-control form-control-sm" inputmode="decimal"></div>
+                                <div class="campo-factor"><label for="f09" class="form-label mb-0 small text-muted">Factor</label><input id="f09" type="text" name="f09" class="form-control form-control-sm" inputmode="decimal"></div>
+                            </div>
+                            <div class="border rounded p-2 mb-2 bg-white" title="Factor-12 Impto. 1ra Categ. Exento GI. Comp. Con Devolución">
+                                <div class="fw-semibold small text-primary mb-1">Columna 12</div>
+                                <div class="campo-monto"><label for="m12" class="form-label mb-0 small text-muted">Monto</label><input id="m12" type="text" name="m12" class="form-control form-control-sm" inputmode="decimal"></div>
+                                <div class="campo-factor"><label for="f12" class="form-label mb-0 small text-muted">Factor</label><input id="f12" type="text" name="f12" class="form-control form-control-sm" inputmode="decimal"></div>
+                            </div>
+                            <div class="border rounded p-2 mb-2 bg-white" title="Factor-15 Impto. Créditos por Impuestos Externos">
+                                <div class="fw-semibold small text-primary mb-1">Columna 15</div>
+                                <div class="campo-monto"><label for="m15" class="form-label mb-0 small text-muted">Monto</label><input id="m15" type="text" name="m15" class="form-control form-control-sm" inputmode="decimal"></div>
+                                <div class="campo-factor"><label for="f15" class="form-label mb-0 small text-muted">Factor</label><input id="f15" type="text" name="f15" class="form-control form-control-sm" inputmode="decimal"></div>
+                            </div>
+                            <div class="border rounded p-2 mb-2 bg-white" title="Factor-18 Rentas Exentas de Impto. GC y/o Impto. Adicional">
+                                <div class="fw-semibold small text-primary mb-1">Columna 18</div>
+                                <div class="campo-monto"><label for="m18" class="form-label mb-0 small text-muted">Monto</label><input id="m18" type="text" name="m18" class="form-control form-control-sm" inputmode="decimal"></div>
+                                <div class="campo-factor"><label for="f18" class="form-label mb-0 small text-muted">Factor</label><input id="f18" type="text" name="f18" class="form-control form-control-sm" inputmode="decimal"></div>
+                            </div>
+                            <div class="border rounded p-2 mb-2 bg-white" title="Factor-21 Con Derecho a Devolución">
+                                <div class="fw-semibold small text-primary mb-1">Columna 21</div>
+                                <div class="campo-monto"><label for="m21" class="form-label mb-0 small text-muted">Monto</label><input id="m21" type="text" name="m21" class="form-control form-control-sm" inputmode="decimal"></div>
+                                <div class="campo-factor"><label for="f21" class="form-label mb-0 small text-muted">Factor</label><input id="f21" type="text" name="f21" class="form-control form-control-sm" inputmode="decimal"></div>
+                            </div>
+                            <div class="border rounded p-2 mb-2 bg-white" title="Factor-24 Sin Derecho a Devolución">
+                                <div class="fw-semibold small text-primary mb-1">Columna 24</div>
+                                <div class="campo-monto"><label for="m24" class="form-label mb-0 small text-muted">Monto</label><input id="m24" type="text" name="m24" class="form-control form-control-sm" inputmode="decimal"></div>
+                                <div class="campo-factor"><label for="f24" class="form-label mb-0 small text-muted">Factor</label><input id="f24" type="text" name="f24" class="form-control form-control-sm" inputmode="decimal"></div>
+                            </div>
+                            <div class="border rounded p-2 mb-2 bg-white" title="Factor-27 Con Derecho a Devolución">
+                                <div class="fw-semibold small text-primary mb-1">Columna 27</div>
+                                <div class="campo-monto"><label for="m27" class="form-label mb-0 small text-muted">Monto</label><input id="m27" type="text" name="m27" class="form-control form-control-sm" inputmode="decimal"></div>
+                                <div class="campo-factor"><label for="f27" class="form-label mb-0 small text-muted">Factor</label><input id="f27" type="text" name="f27" class="form-control form-control-sm" inputmode="decimal"></div>
+                            </div>
+                            <div class="border rounded p-2 mb-2 bg-white" title="Factor-30 Con Derecho a Devolución">
+                                <div class="fw-semibold small text-primary mb-1">Columna 30</div>
+                                <div class="campo-monto"><label for="m30" class="form-label mb-0 small text-muted">Monto</label><input id="m30" type="text" name="m30" class="form-control form-control-sm" inputmode="decimal"></div>
+                                <div class="campo-factor"><label for="f30" class="form-label mb-0 small text-muted">Factor</label><input id="f30" type="text" name="f30" class="form-control form-control-sm" inputmode="decimal"></div>
+                            </div>
+                            <div class="border rounded p-2 mb-2 bg-white" title="Factor-33 Crédito por IPE">
+                                <div class="fw-semibold small text-primary mb-1">Columna 33</div>
+                                <div class="campo-monto"><label for="m33" class="form-label mb-0 small text-muted">Monto</label><input id="m33" type="text" name="m33" class="form-control form-control-sm" inputmode="decimal"></div>
+                                <div class="campo-factor"><label for="f33" class="form-label mb-0 small text-muted">Factor</label><input id="f33" type="text" name="f33" class="form-control form-control-sm" inputmode="decimal"></div>
+                            </div>
+                            <div class="border rounded p-2 mb-2 bg-white" title="Factor-36 Tasa Efectiva Del Cred. Del FUNT (TEX)">
+                                <div class="fw-semibold small text-primary mb-1">Columna 36</div>
+                                <div class="campo-monto"><label for="m36" class="form-label mb-0 small text-muted">Monto</label><input id="m36" type="text" name="m36" class="form-control form-control-sm" inputmode="decimal"></div>
+                                <div class="campo-factor"><label for="f36" class="form-label mb-0 small text-muted">Factor</label><input id="f36" type="text" name="f36" class="form-control form-control-sm" inputmode="decimal"></div>
+                            </div>
                         </div>
 
                         <div class="col-md-4">
-                            <div class="mb-1"><label for="f10" class="form-label mb-0 small">Factor-10 Impuesto Tasa Adicional Exento Art. 21</label><input id="f10" type="text" name="f10" class="form-control form-control-sm" inputmode="decimal"></div>
-                            <div class="mb-1"><label for="f13" class="form-label mb-0 small">Factor-13 Impto. 1ra Categ. Afecto GI. Comp. Sin Devolución</label><input id="f13" type="text" name="f13" class="form-control form-control-sm" inputmode="decimal"></div>
-                            <div class="mb-1"><label for="f16" class="form-label mb-0 small">Factor-16 No Constitutiva Renta Acogida Impto.</label><input id="f16" type="text" name="f16" class="form-control form-control-sm" inputmode="decimal"></div>
-                            <div class="mb-1"><label for="f19" class="form-label mb-0 small">Factor-19 Ingreso no Constitutivos de Renta</label><input id="f19" type="text" name="f19" class="form-control form-control-sm" inputmode="decimal"></div>
-                            <div class="mb-1"><label for="f22" class="form-label mb-0 small">Factor-22 Sin Derecho a Devolución</label><input id="f22" type="text" name="f22" class="form-control form-control-sm" inputmode="decimal"></div>
-                            <div class="mb-1"><label for="f25" class="form-label mb-0 small">Factor-25 Con Derecho a Devolución</label><input id="f25" type="text" name="f25" class="form-control form-control-sm" inputmode="decimal"></div>
-                            <div class="mb-1"><label for="f28" class="form-label mb-0 small">Factor-28 Crédito por IPE</label><input id="f28" type="text" name="f28" class="form-control form-control-sm" inputmode="decimal"></div>
-                            <div class="mb-1"><label for="f31" class="form-label mb-0 small">Factor-31 Sin Derecho a Devolución</label><input id="f31" type="text" name="f31" class="form-control form-control-sm" inputmode="decimal"></div>
-                            <div class="mb-1"><label for="f34" class="form-label mb-0 small">Factor-34 Cred. Por Impto. Tasa Adicional, Ex Art. 21 LIR</label><input id="f34" type="text" name="f34" class="form-control form-control-sm" inputmode="decimal"></div>
-                            <div class="mb-1"><label for="f37" class="form-label mb-0 small">Factor-37 Devolución Capital Art. 17 num 7 LIR</label><input id="f37" type="text" name="f37" class="form-control form-control-sm" inputmode="decimal"></div>
+                            <div class="border rounded p-2 mb-2 bg-white" title="Factor-10 Impuesto Tasa Adicional Exento Art. 21">
+                                <div class="fw-semibold small text-primary mb-1">Columna 10</div>
+                                <div class="campo-monto"><label for="m10" class="form-label mb-0 small text-muted">Monto</label><input id="m10" type="text" name="m10" class="form-control form-control-sm" inputmode="decimal"></div>
+                                <div class="campo-factor"><label for="f10" class="form-label mb-0 small text-muted">Factor</label><input id="f10" type="text" name="f10" class="form-control form-control-sm" inputmode="decimal"></div>
+                            </div>
+                            <div class="border rounded p-2 mb-2 bg-white" title="Factor-13 Impto. 1ra Categ. Afecto GI. Comp. Sin Devolución">
+                                <div class="fw-semibold small text-primary mb-1">Columna 13</div>
+                                <div class="campo-monto"><label for="m13" class="form-label mb-0 small text-muted">Monto</label><input id="m13" type="text" name="m13" class="form-control form-control-sm" inputmode="decimal"></div>
+                                <div class="campo-factor"><label for="f13" class="form-label mb-0 small text-muted">Factor</label><input id="f13" type="text" name="f13" class="form-control form-control-sm" inputmode="decimal"></div>
+                            </div>
+                            <div class="border rounded p-2 mb-2 bg-white" title="Factor-16 No Constitutiva Renta Acogida Impto.">
+                                <div class="fw-semibold small text-primary mb-1">Columna 16</div>
+                                <div class="campo-monto"><label for="m16" class="form-label mb-0 small text-muted">Monto</label><input id="m16" type="text" name="m16" class="form-control form-control-sm" inputmode="decimal"></div>
+                                <div class="campo-factor"><label for="f16" class="form-label mb-0 small text-muted">Factor</label><input id="f16" type="text" name="f16" class="form-control form-control-sm" inputmode="decimal"></div>
+                            </div>
+                            <div class="border rounded p-2 mb-2 bg-white" title="Factor-19 Ingreso no Constitutivos de Renta">
+                                <div class="fw-semibold small text-primary mb-1">Columna 19</div>
+                                <div class="campo-monto"><label for="m19" class="form-label mb-0 small text-muted">Monto</label><input id="m19" type="text" name="m19" class="form-control form-control-sm" inputmode="decimal"></div>
+                                <div class="campo-factor"><label for="f19" class="form-label mb-0 small text-muted">Factor</label><input id="f19" type="text" name="f19" class="form-control form-control-sm" inputmode="decimal"></div>
+                            </div>
+                            <div class="border rounded p-2 mb-2 bg-white" title="Factor-22 Sin Derecho a Devolución">
+                                <div class="fw-semibold small text-primary mb-1">Columna 22</div>
+                                <div class="campo-monto"><label for="m22" class="form-label mb-0 small text-muted">Monto</label><input id="m22" type="text" name="m22" class="form-control form-control-sm" inputmode="decimal"></div>
+                                <div class="campo-factor"><label for="f22" class="form-label mb-0 small text-muted">Factor</label><input id="f22" type="text" name="f22" class="form-control form-control-sm" inputmode="decimal"></div>
+                            </div>
+                            <div class="border rounded p-2 mb-2 bg-white" title="Factor-25 Con Derecho a Devolución">
+                                <div class="fw-semibold small text-primary mb-1">Columna 25</div>
+                                <div class="campo-monto"><label for="m25" class="form-label mb-0 small text-muted">Monto</label><input id="m25" type="text" name="m25" class="form-control form-control-sm" inputmode="decimal"></div>
+                                <div class="campo-factor"><label for="f25" class="form-label mb-0 small text-muted">Factor</label><input id="f25" type="text" name="f25" class="form-control form-control-sm" inputmode="decimal"></div>
+                            </div>
+                            <div class="border rounded p-2 mb-2 bg-white" title="Factor-28 Crédito por IPE">
+                                <div class="fw-semibold small text-primary mb-1">Columna 28</div>
+                                <div class="campo-monto"><label for="m28" class="form-label mb-0 small text-muted">Monto</label><input id="m28" type="text" name="m28" class="form-control form-control-sm" inputmode="decimal"></div>
+                                <div class="campo-factor"><label for="f28" class="form-label mb-0 small text-muted">Factor</label><input id="f28" type="text" name="f28" class="form-control form-control-sm" inputmode="decimal"></div>
+                            </div>
+                            <div class="border rounded p-2 mb-2 bg-white" title="Factor-31 Sin Derecho a Devolución">
+                                <div class="fw-semibold small text-primary mb-1">Columna 31</div>
+                                <div class="campo-monto"><label for="m31" class="form-label mb-0 small text-muted">Monto</label><input id="m31" type="text" name="m31" class="form-control form-control-sm" inputmode="decimal"></div>
+                                <div class="campo-factor"><label for="f31" class="form-label mb-0 small text-muted">Factor</label><input id="f31" type="text" name="f31" class="form-control form-control-sm" inputmode="decimal"></div>
+                            </div>
+                            <div class="border rounded p-2 mb-2 bg-white" title="Factor-34 Cred. Por Impto. Tasa Adicional, Ex Art. 21 LIR">
+                                <div class="fw-semibold small text-primary mb-1">Columna 34</div>
+                                <div class="campo-monto"><label for="m34" class="form-label mb-0 small text-muted">Monto</label><input id="m34" type="text" name="m34" class="form-control form-control-sm" inputmode="decimal"></div>
+                                <div class="campo-factor"><label for="f34" class="form-label mb-0 small text-muted">Factor</label><input id="f34" type="text" name="f34" class="form-control form-control-sm" inputmode="decimal"></div>
+                            </div>
+                            <div class="border rounded p-2 mb-2 bg-white" title="Factor-37 Devolución Capital Art. 17 num 7 LIR">
+                                <div class="fw-semibold small text-primary mb-1">Columna 37</div>
+                                <div class="campo-monto"><label for="m37" class="form-label mb-0 small text-muted">Monto</label><input id="m37" type="text" name="m37" class="form-control form-control-sm" inputmode="decimal"></div>
+                                <div class="campo-factor"><label for="f37" class="form-label mb-0 small text-muted">Factor</label><input id="f37" type="text" name="f37" class="form-control form-control-sm" inputmode="decimal"></div>
+                            </div>
                         </div>
                     </div>
 
