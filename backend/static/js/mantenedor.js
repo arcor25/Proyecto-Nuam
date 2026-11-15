@@ -128,7 +128,7 @@
     $("btnModificar").disabled = false;
     $("btnEliminar").disabled = false;
     $("btnCopiar").disabled = false;
-    $("btnSolicitarRect").disabled = true;
+    actualizarBotonRect();
   }
 
   function deseleccionar() {
@@ -136,6 +136,7 @@
     $("btnModificar").disabled = true;
     $("btnEliminar").disabled = true;
     $("btnCopiar").disabled = true;
+    $("btnSolicitarRect").disabled = true;
   }
 
   // ---------- Búsqueda y paginación ----------
@@ -204,7 +205,6 @@
     $("btnSiguiente").addEventListener("click", () => estado.siguiente && cargar(estado.siguiente));
   });
 
-  // ---------- Modal de ingreso (parte A) ----------
   const FACTORES_ID = COLUMNAS_FACTOR.map((c) => `f${String(c).padStart(2, "0")}`);
   const MONTOS_ID = COLUMNAS_FACTOR.map((c) => `m${String(c).padStart(2, "0")}`);
 
@@ -226,7 +226,9 @@
   }
 
   function marcarErrorEnCampo(nombre, texto) {
-    const el = document.querySelector(`#formIngreso [name="${nombre}"]`);
+    const porMontos = $("ingPorMontos") && $("ingPorMontos").checked;
+    const nombreReal = (porMontos && /^f\d{2}$/.test(nombre)) ? `m${nombre.slice(1)}` : nombre;
+    const el = document.querySelector(`#formIngreso [name="${nombreReal}"]`);
     if (!el) return false;
     el.classList.add("is-invalid");
     const aviso = document.createElement("div");
@@ -328,7 +330,6 @@
 
   document.addEventListener("DOMContentLoaded", iniciarModalIngreso);
 
-  // ---------- Modificar, eliminar y copiar (parte B) ----------
   const CAMPOS_MOD = ["modMercado", "modInstrumento", "modSecuencia", "modDividendo", "modFechaPago",
                       "modEjercicio", "modValorHistorico", "modTipoSociedad", "modDescripcion",
                       "modFactorAct", "modIsfut", "modPorMontos"];
@@ -498,7 +499,6 @@
 
   document.addEventListener("DOMContentLoaded", iniciarModificarEliminarCopiar);
 
-  // ---------- Cargas CSV (parte C) ----------
   let cargaActual = { id: null, modo: null };
 
   function pintarVistaPrevia(modal, datos) {
@@ -843,6 +843,5 @@
 
   document.addEventListener("DOMContentLoaded", iniciarRectificacionesSupervisor);
 
-  // Lo que usarán los pasos siguientes (modales de ingreso, modificar y cargas)
   window.mantenedor = { api, textoDeError, mostrarMensaje, ocultarMensaje, cargar, filtros, estado, csrfToken };
 })();

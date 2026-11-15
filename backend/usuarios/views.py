@@ -79,3 +79,107 @@ def login_web(request):
 def logout_web(request):
     django_logout(request)
     return redirect("/login/")
+
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as CoreValidationError
+from django.core.validators import validate_email
+from calificaciones.models import Emisor
+from .models import Corredora, Usuario
+
+def registro_web(request):
+    es_admin = request.user.is_authenticated and request.user.rol == Usuario.Rol.ADMIN_TI
+    corredoras = Corredora.objects.order_by("nombre_corredora")
+    roles = Usuario.Rol.choices if es_admin else [(Usuario.Rol.CORREDOR, "Corredor de Bolsa")]
+    contexto = {
+        "corredoras": corredoras,
+        "roles": roles,
+        "es_admin": es_admin,
+        "valores": {},
+        "errores": {},
+        "enviado": False,
+    }
+
+    if request.method == "GET":
+        return render(request, "usuarios/registro.html", contexto)
+
+    datos = {k: request.POST.get(k, "").strip() for k in (
+        "rut", "nombre_completo", "email", "rol", "pais",
+        "corredora_id", "nueva_corredora_codigo", "nueva_corredora_nombre"
+    )}
+    if not es_admin:
+        datos["rol"] = Usuario.Rol.CORREDOR
+
+    password = request.POST.get("password", "")
+    password_confirm = request.POST.get("password_confirm", "")
+    rut_limpio = datos["rut"].replace(".", "").upper()
+    errores = {}
+
+    if not rut_limpio or not Emisor(rut_emisor=rut_limpio).validar_rut():
+        errores["rut"] = "Ingrese un RUT válido con guion (ej. 19876543-0)."
+    elif Usuario.objects.filter(rut=rut_limpio).exists():
+        errores["rut"] = "Este RUT ya se encuentra registrado."
+
+    if len(datos["nombre_completo"]) < 3:
+        errores["nombre_completo"] = "Ingrese su nombre completo (mínimo 3 caracteres)."
+
+    try:
+        validate_email(datos["email"])
+        if Usuario.objects.filter(email__iexact=datos["email"]).exists():
+            errores["email"] = "Este correo ya está registrado."
+    except CoreValidationError:
+        errores["email"] = "Ingrese un correo electrónico válido."
+
+    if datos["rol"] not in Usuario.Rol.values:
+        errores["rol"] = "Seleccione un rol válido."
+
+    corredora = None
+    if datos["rol"] == Usuario.Rol.CORREDOR:
+        if datos["corredora_id"]:
+            corredora = Corredora.objects.filter(pk=datos["corredora_id"]).first()
+            if not corredora:
+                errores["corredora"] = "La corredora seleccionada no existe."
+        elif datos["nueva_corredora_codigo"] and datos["nueva_corredora_nombre"]:
+            corredora, _ = Corredora.objects.get_or_create(
+                codigo_corredora=datos["nueva_corredora_codigo"].upper(),
+                defaults={"nombre_corredora": datos["nueva_corredora_nombre"]},
+            )
+        else:
+            errores["corredora"] = "Seleccione una corredora o ingrese código y nombre para crear una."
+
+    try:
+        validate_password(password)
+    except CoreValidationError as exc:
+        errores["password"] = " ".join(exc.messages)
+
+    if password != password_confirm:
+        errores["password_confirm"] = "Las contraseñas no coinciden."
+
+    contexto.update({"valores": datos, "errores": errores, "enviado": True})
+    if errores:
+        return render(request, "usuarios/registro.html", contexto, status=400)
+
+    usuario = Usuario.objects.create_user(
+        email=datos["email"],
+        password=password,
+        rut=rut_limpio,
+        nombre_completo=datos["nombre_completo"],
+        rol=datos["rol"],
+        pais=datos["pais"] or "Chile",
+        corredora=corredora,
+    )
+    if request.user.is_authenticated:
+        BitacoraAuditoria.registrar_evento(
+            request.user, BitacoraAuditoria.TipoAccion.GESTION_USUARIO,
+            obtener_ip(request), "Usuario", usuario.pk,
+            valor_nuevo={"email": usuario.email, "rol": usuario.rol},
+        )
+
+    return render(request, "usuarios/registro.html", {
+        "corredoras": Corredora.objects.order_by("nombre_corredora"),
+        "roles": roles,
+        "es_admin": es_admin,
+        "valores": {},
+        "errores": {},
+        "enviado": False,
+        "exito": f"Usuario {usuario.nombre_completo} ({usuario.get_rol_display()}) creado correctamente.",
+    })

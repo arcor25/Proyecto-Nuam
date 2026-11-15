@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Usuario · NUAM</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light d-flex flex-column min-vh-100">
+
+    <nav class="navbar navbar-expand-lg navbar-dark shadow-sm" style="background-color: #1C4E80;">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{% url 'inicio' %}">NUAM · Calificaciones Tributarias</a>
+            <div class="d-flex gap-2">
+                <a href="{% url 'inicio' %}" class="btn btn-sm btn-outline-light">Inicio</a>
+                <a href="{% url 'login' %}" class="btn btn-sm btn-light fw-bold text-primary">Iniciar Sesión</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-4 flex-grow-1 d-flex align-items-center justify-content-center">
+        <div class="card shadow-sm" style="max-width: 34rem; width: 100%;">
+            <div class="card-header text-white fw-bold" style="background-color: #1C4E80;">
+                Registro de Usuario del Sistema
+            </div>
+            <div class="card-body p-4">
+
+                {% if exito %}
+                <div class="alert alert-success" role="alert">
+                    <strong>¡Registro exitoso!</strong> {{ exito }}
+                    <div class="mt-2">
+                        <a href="{% url 'login' %}" class="btn btn-sm btn-success fw-bold">Ir a Iniciar Sesión</a>
+                    </div>
+                </div>
+                {% endif %}
+
+                <form method="post" action="{% url 'registro' %}" novalidate>
+                    {% csrf_token %}
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-5">
+                            <label for="rut" class="form-label small fw-semibold">RUT (sin puntos)</label>
+                            <input id="rut" type="text" name="rut" placeholder="12345678-9"
+                                   value="{{ valores.rut|default:'' }}"
+                                   class="form-control form-control-sm {% if errores.rut %}is-invalid{% elif enviado %}is-valid{% endif %}" required>
+                            {% if errores.rut %}<div class="invalid-feedback">{{ errores.rut }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-7">
+                            <label for="nombre_completo" class="form-label small fw-semibold">Nombre completo</label>
+                            <input id="nombre_completo" type="text" name="nombre_completo" placeholder="Ej. Ana Pérez Soto"
+                                   value="{{ valores.nombre_completo|default:'' }}"
+                                   class="form-control form-control-sm {% if errores.nombre_completo %}is-invalid{% elif enviado %}is-valid{% endif %}" required>
+                            {% if errores.nombre_completo %}<div class="invalid-feedback">{{ errores.nombre_completo }}</div>{% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="email" class="form-label small fw-semibold">Correo electrónico</label>
+                        <input id="email" type="email" name="email" placeholder="usuario@corredora.cl"
+                               value="{{ valores.email|default:'' }}"
+                               class="form-control form-control-sm {% if errores.email %}is-invalid{% elif enviado %}is-valid{% endif %}" required>
+                        {% if errores.email %}<div class="invalid-feedback">{{ errores.email }}</div>{% endif %}
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label for="rol" class="form-label small fw-semibold">Rol operativo</label>
+                            {% if es_admin %}
+                            <select id="rol" name="rol" class="form-select form-select-sm {% if errores.rol %}is-invalid{% elif enviado %}is-valid{% endif %}" onchange="toggleCorredora()">
+                                {% for codigo, etiqueta in roles %}
+                                    <option value="{{ codigo }}" {% if valores.rol == codigo %}selected{% endif %}>{{ etiqueta }}</option>
+                                {% endfor %}
+                            </select>
+                            {% else %}
+                            <input type="text" class="form-control form-control-sm bg-light" value="Corredor de Bolsa" readonly>
+                            <input id="rol" type="hidden" name="rol" value="CORREDOR">
+                            {% endif %}
+                            {% if errores.rol %}<div class="invalid-feedback">{{ errores.rol }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="pais" class="form-label small fw-semibold">País</label>
+                            <input id="pais" type="text" name="pais" value="{{ valores.pais|default:'Chile' }}"
+                                   class="form-control form-control-sm {% if enviado %}is-valid{% endif %}">
+                        </div>
+                    </div>
+
+                    <div id="bloqueCorredora" class="mb-3 p-2 bg-light border rounded">
+                        <label for="corredora_id" class="form-label small fw-semibold mb-1">Corredora de Bolsa asociada</label>
+                        <select id="corredora_id" name="corredora_id" class="form-select form-select-sm mb-2 {% if errores.corredora %}is-invalid{% endif %}">
+                            <option value="">— Seleccionar existente o crear nueva abajo —</option>
+                            {% for c in corredoras %}
+                                <option value="{{ c.id }}" {% if valores.corredora_id == c.id|stringformat:'s' %}selected{% endif %}>{{ c.codigo_corredora }} · {{ c.nombre_corredora }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="row g-2">
+                            <div class="col-4">
+                                <input type="text" name="nueva_corredora_codigo" placeholder="Cód. nueva (ej. COR01)"
+                                       value="{{ valores.nueva_corredora_codigo|default:'' }}" class="form-control form-control-sm">
+                            </div>
+                            <div class="col-8">
+                                <input type="text" name="nueva_corredora_nombre" placeholder="Nombre nueva corredora (si no existe)"
+                                       value="{{ valores.nueva_corredora_nombre|default:'' }}" class="form-control form-control-sm">
+                            </div>
+                        </div>
+                        {% if errores.corredora %}<div class="text-danger small mt-1">{{ errores.corredora }}</div>{% endif %}
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label for="password" class="form-label small fw-semibold">Contraseña</label>
+                            <input id="password" type="password" name="password"
+                                   class="form-control form-control-sm {% if errores.password %}is-invalid{% endif %}" required>
+                            {% if errores.password %}<div class="invalid-feedback">{{ errores.password }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="password_confirm" class="form-label small fw-semibold">Confirmar contraseña</label>
+                            <input id="password_confirm" type="password" name="password_confirm"
+                                   class="form-control form-control-sm {% if errores.password_confirm %}is-invalid{% endif %}" required>
+                            {% if errores.password_confirm %}<div class="invalid-feedback">{{ errores.password_confirm }}</div>{% endif %}
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn w-100 text-white fw-bold" style="background-color: #1C4E80;">REGISTRAR USUARIO</button>
+                </form>
+
+                <div class="text-center mt-3 small">
+                    ¿Ya tienes cuenta? <a href="{% url 'login' %}" class="fw-semibold">Inicia sesión aquí</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleCorredora() {
+            const rol = document.getElementById("rol").value;
+            document.getElementById("bloqueCorredora").classList.toggle("d-none", rol !== "CORREDOR");
+        }
+        document.addEventListener("DOMContentLoaded", toggleCorredora);
+    </script>
+</body>
+</html>

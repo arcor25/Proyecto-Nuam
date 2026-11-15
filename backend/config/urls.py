@@ -15,48 +15,36 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.shortcuts import render
+from django.urls import include, path
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenRefreshView
 
-from usuarios.views import LoginView, LogoutView, PerfilView
-
-from calificaciones.views import mantenedor
-
-from django.urls import include
-from rest_framework.routers import DefaultRouter
-
-from calificaciones.api import EmisorViewSet, InstrumentoViewSet
-
 from calificaciones.api import CalificacionViewSet, EmisorViewSet, InstrumentoViewSet
-
+from calificaciones.views import catalogo, mantenedor
 from cargas.api import ArchivoCSVViewSet
-
-from usuarios.views import login_web, logout_web
-
-from django.shortcuts import redirect
-
 from rectificaciones.api import SolicitudRectificacionViewSet
+from usuarios.views import LoginView, LogoutView, PerfilView, login_web, logout_web, registro_web
+
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def health(request):
     return Response({"estado": "ok"})
 
+
 router = DefaultRouter()
 router.register("emisores", EmisorViewSet, basename="emisor")
 router.register("instrumentos", InstrumentoViewSet, basename="instrumento")
-
 router.register("calificaciones", CalificacionViewSet, basename="calificacion")
-
 router.register("cargas", ArchivoCSVViewSet, basename="carga")
-
 router.register("rectificaciones", SolicitudRectificacionViewSet, basename="rectificacion")
 
 urlpatterns = [
-    path("", lambda request: redirect("/login/")),
+    path("", lambda request: render(request, "inicio.html"), name="inicio"),
     path("admin/", admin.site.urls),
     path("api/health/", health),
     path("api/auth/login/", LoginView.as_view()),
@@ -64,8 +52,10 @@ urlpatterns = [
     path("api/auth/logout/", LogoutView.as_view()),
     path("api/auth/perfil/", PerfilView.as_view()),
     path("calificaciones/", mantenedor, name="mantenedor"),
+    path("catalogo/", catalogo, name="catalogo"),
     path("api/", include(router.urls)),
-    path("api-auth/", include("rest_framework.urls")),  # login para probar la API con usuarios que no son del admin
+    path("api-auth/", include("rest_framework.urls")),
     path("login/", login_web, name="login"),
     path("logout/", logout_web, name="logout"),
+    path("registro/", registro_web, name="registro"),
 ]

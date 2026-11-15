@@ -30,6 +30,11 @@
                 {% endif %}
 
                 <button type="submit" class="btn w-100 text-white fw-bold" style="background-color: #1C4E80;">INGRESAR</button>
+
+                <div class="d-flex justify-content-between mt-3 small">
+                    <a href="{% url 'inicio' %}" class="text-muted text-decoration-none">Volver al inicio</a>
+                    <a href="{% url 'registro' %}" class="fw-semibold text-decoration-none">Crear cuenta</a>
+                </div>
             </form>
         </div>
     </div>
