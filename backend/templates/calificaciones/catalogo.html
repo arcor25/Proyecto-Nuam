@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emisores e Instrumentos · NUAM</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+    <nav class="navbar navbar-expand-lg navbar-dark shadow-sm" style="background-color: #1C4E80;">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand fw-bold" href="{% url 'inicio' %}">NUAM · Calificaciones</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="{% url 'inicio' %}">Inicio</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'mantenedor' %}">Mantenedor</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="{% url 'catalogo' %}">Emisores e Instrumentos</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'registro' %}">Registrar Usuario</a></li>
+                </ul>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-light text-dark">{{ request.user.get_rol_display }}</span>
+                    <span class="small text-white-50">{{ request.user.email }}</span>
+                    <form method="post" action="{% url 'logout' %}" class="m-0">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-outline-light">Cerrar Sesión</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid px-4 my-3">
+        <div id="alertaCatalogo" class="alert d-none py-2 small" role="alert"></div>
+
+        {% if request.user.rol != "ADMIN_TI" %}
+        <div class="alert alert-info py-2 small">
+            Estás conectado como <strong>{{ request.user.get_rol_display }}</strong>. Puedes consultar el catálogo vigente;
+            solo el rol <strong>Administrador TI</strong> puede crear o desactivar emisores e instrumentos (control de acceso Ley 21.459).
+        </div>
+        {% endif %}
+
+        <div class="row g-3">
+            <!-- EMISORES -->
+            <div class="col-lg-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-white fw-bold" style="color: #1B4965;">Emisores Registrados</div>
+                    <div class="card-body">
+                        {% if request.user.rol == "ADMIN_TI" %}
+                        <form id="formEmisor" class="row g-2 mb-3 bg-light p-2 border rounded" novalidate>
+                            {% csrf_token %}
+                            <div class="col-md-4">
+                                <input type="text" name="rut_emisor" class="form-control form-control-sm" placeholder="RUT (ej. 96509660-4)" required>
+                            </div>
+                            <div class="col-md-5">
+                                <input type="text" name="razon_social" class="form-control form-control-sm" placeholder="Razón Social" required>
+                            </div>
+                            <div class="col-md-3">
+                                <select name="mercado" class="form-select form-select-sm">
+                                    <option value="ACN">Acciones (ACN)</option>
+                                    <option value="CFI">Cuotas (CFI)</option>
+                                    <option value="FM">Fondos (FM)</option>
+                                </select>
+                            </div>
+                            <div class="col-12 text-end">
+                                <button type="submit" class="btn btn-sm text-white fw-bold" style="background-color: #1C4E80;">+ Agregar Emisor</button>
+                            </div>
+                        </form>
+                        {% endif %}
+
+                        <div class="table-responsive border rounded" style="max-height: 360px;">
+                            <table class="table table-sm table-hover mb-0 align-middle small">
+                                <thead class="table-light">
+                                    <tr><th>RUT</th><th>Razón Social</th><th>Mercado</th><th></th></tr>
+                                </thead>
+                                <tbody id="tablaEmisores"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- INSTRUMENTOS -->
+            <div class="col-lg-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-white fw-bold" style="color: #1B4965;">Instrumentos Inscritos</div>
+                    <div class="card-body">
+                        {% if request.user.rol == "ADMIN_TI" %}
+                        <form id="formInstrumento" class="row g-2 mb-3 bg-light p-2 border rounded" novalidate>
+                            {% csrf_token %}
+                            <div class="col-md-4">
+                                <input type="text" name="codigo_nemotecnico" class="form-control form-control-sm" placeholder="Nemotécnico (ej. FALABELLA)" required>
+                            </div>
+                            <div class="col-md-4">
+                                <select id="selectEmisor" name="emisor" class="form-select form-select-sm" required></select>
+                            </div>
+                            <div class="col-md-4">
+                                <input type="text" name="descripcion" class="form-control form-control-sm" placeholder="Descripción">
+                            </div>
+                            <div class="col-12 text-end">
+                                <button type="submit" class="btn btn-sm text-white fw-bold" style="background-color: #1C4E80;">+ Agregar Instrumento</button>
+                            </div>
+                        </form>
+                        {% endif %}
+
+                        <div class="table-responsive border rounded" style="max-height: 360px;">
+                            <table class="table table-sm table-hover mb-0 align-middle small">
+                                <thead class="table-light">
+                                    <tr><th>Nemotécnico</th><th>Emisor</th><th>Mercado</th><th></th></tr>
+                                </thead>
+                                <tbody id="tablaInstrumentos"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const ES_ADMIN = "{{ request.user.rol }}" === "ADMIN_TI";
+        const csrf = () => document.querySelector("input[name=csrfmiddlewaretoken]")?.value || "";
+
+        function mostrarAlerta(texto, tipo = "success") {
+            const box = document.getElementById("alertaCatalogo");
+            box.className = `alert alert-${tipo} py-2 small`;
+            box.textContent = texto;
+        }
+
+        function marcarErrores(form, errores) {
+            form.querySelectorAll(".is-invalid").forEach(el => el.classList.remove("is-invalid"));
+            form.querySelectorAll(".invalid-feedback").forEach(el => el.remove());
+            Object.entries(errores || {}).forEach(([campo, msgs]) => {
+                const input = form.querySelector(`[name="${campo}"]`);
+                if (input) {
+                    input.classList.add("is-invalid");
+                    const div = document.createElement("div");
+                    div.className = "invalid-feedback";
+                    div.textContent = Array.isArray(msgs) ? msgs.join(" ") : msgs;
+                    input.insertAdjacentElement("afterend", div);
+                }
+            });
+        }
+
+        async function cargarCatalogo() {
+            const [resEm, resInst] = await Promise.all([
+                fetch("/api/emisores/").then(r => r.json()),
+                fetch("/api/instrumentos/").then(r => r.json())
+            ]);
+            const emisores = resEm.results || resEm;
+            const instrumentos = resInst.results || resInst;
+
+            const tbodyEm = document.getElementById("tablaEmisores");
+            tbodyEm.innerHTML = "";
+            const selEm = document.getElementById("selectEmisor");
+            if (selEm) selEm.innerHTML = '<option value="">— Emisor —</option>';
+
+            emisores.forEach(e => {
+                if (selEm) selEm.innerHTML += `<option value="${e.id}">${e.razon_social} (${e.mercado})</option>`;
+                tbodyEm.innerHTML += `<tr>
+                    <td>${e.rut_emisor}</td>
+                    <td class="fw-semibold">${e.razon_social}</td>
+                    <td>${e.mercado}</td>
+                    <td class="text-end">${ES_ADMIN ? `<button class="btn btn-sm btn-outline-danger py-0" onclick="desactivarEmisor(${e.id}, '${e.razon_social}')">Desactivar</button>` : ""}</td>
+                </tr>`;
+            });
+
+            const tbodyInst = document.getElementById("tablaInstrumentos");
+            tbodyInst.innerHTML = "";
+            instrumentos.forEach(i => {
+                tbodyInst.innerHTML += `<tr>
+                    <td class="fw-semibold">${i.codigo_nemotecnico}</td>
+                    <td>${i.emisor_razon_social}</td>
+                    <td>${i.mercado}</td>
+                    <td class="text-end">${ES_ADMIN ? `<button class="btn btn-sm btn-outline-danger py-0" onclick="desinscribirInstrumento(${i.id}, '${i.codigo_nemotecnico}')">Desinscribir</button>` : ""}</td>
+                </tr>`;
+            });
+        }
+
+        async function desactivarEmisor(id, nombre) {
+            if (!confirm(`¿Confirmas desactivar el emisor ${nombre}?`)) return;
+            const resp = await fetch(`/api/emisores/${id}/`, { method: "DELETE", headers: { "X-CSRFToken": csrf() } });
+            if (resp.ok) { mostrarAlerta("Emisor desactivado correctamente.", "success"); cargarCatalogo(); }
+        }
+
+        async function desinscribirInstrumento(id, codigo) {
+            if (!confirm(`¿Confirmas desinscribir el instrumento ${codigo}?`)) return;
+            const resp = await fetch(`/api/instrumentos/${id}/`, { method: "DELETE", headers: { "X-CSRFToken": csrf() } });
+            if (resp.ok) { mostrarAlerta("Instrumento desinscrito correctamente.", "success"); cargarCatalogo(); }
+        }
+
+        document.getElementById("formEmisor")?.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const cuerpo = Object.fromEntries(new FormData(form));
+            const resp = await fetch("/api/emisores/", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "X-CSRFToken": csrf() },
+                body: JSON.stringify(cuerpo)
+            });
+            const data = await resp.json().catch(() => ({}));
+            if (!resp.ok) { marcarErrores(form, data); return; }
+            form.reset();
+            marcarErrores(form, {});
+            mostrarAlerta("Emisor registrado correctamente.", "success");
+            cargarCatalogo();
+        });
+
+        document.getElementById("formInstrumento")?.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const cuerpo = Object.fromEntries(new FormData(form));
+            const resp = await fetch("/api/instrumentos/", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "X-CSRFToken": csrf() },
+                body: JSON.stringify(cuerpo)
+            });
+            const data = await resp.json().catch(() => ({}));
+            if (!resp.ok) { marcarErrores(form, data); return; }
+            form.reset();
+            marcarErrores(form, {});
+            mostrarAlerta("Instrumento registrado correctamente.", "success");
+            cargarCatalogo();
+        });
+
+        document.addEventListener("DOMContentLoaded", cargarCatalogo);
+    </script>
+</body>
+</html>

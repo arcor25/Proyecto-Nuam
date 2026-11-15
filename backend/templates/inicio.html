@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inicio · Sistema de Calificaciones Tributarias NUAM</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light d-flex flex-column min-vh-100">
+
+    <nav class="navbar navbar-expand-lg navbar-dark shadow-sm" style="background-color: #1C4E80;">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{% url 'inicio' %}">NUAM · Calificaciones Tributarias</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navPrincipal">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navPrincipal">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item"><a class="nav-link active" href="{% url 'inicio' %}">Inicio</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#proyecto">El Proyecto</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#contacto">Contacto</a></li>
+                    {% if request.user.is_authenticated %}
+                    <li class="nav-item"><a class="nav-link" href="{% url 'mantenedor' %}">Mantenedor</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'catalogo' %}">Emisores e Instrumentos</a></li>
+                    {% endif %}
+                </ul>
+                <div class="d-flex gap-2">
+                    {% if request.user.is_authenticated %}
+                        <a href="{% url 'mantenedor' %}" class="btn btn-sm btn-light fw-bold text-primary">Ir al Sistema</a>
+                    {% else %}
+                        <a href="{% url 'registro' %}" class="btn btn-sm btn-outline-light">Registrarse</a>
+                        <a href="{% url 'login' %}" class="btn btn-sm btn-light fw-bold text-primary">Iniciar Sesión</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <header id="proyecto" class="bg-white border-bottom py-5">
+        <div class="container">
+            <div class="row align-items-center g-4">
+                <div class="col-lg-7">
+                    <span class="badge bg-primary-subtle text-primary mb-2">Declaración Jurada 1948 · Mercado Integrado</span>
+                    <h1 class="display-6 fw-bold mb-3" style="color: #1B4965;">
+                        Mantenedor de Calificaciones Tributarias NUAM
+                    </h1>
+                    <p class="lead text-muted mb-4">
+                        Sistema web para el registro, cálculo automático de factores (columnas 08 a 37), carga masiva mediante
+                        archivos CSV y gestión de rectificaciones para corredoras de bolsa.
+                    </p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="{% url 'login' %}" class="btn text-white fw-bold px-4" style="background-color: #1C4E80;">Ingresar al Sistema</a>
+                        <a href="{% url 'registro' %}" class="btn btn-outline-primary px-4">Registrar Corredor</a>
+                        <a href="#contacto" class="btn btn-outline-secondary px-4">Contacto</a>
+                    </div>
+                </div>
+                <div class="col-lg-5">
+                    <div class="card border shadow-sm">
+                        <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='160' viewBox='0 0 600 160'><rect width='600' height='160' fill='%231C4E80'/><text x='50%25' y='46%25' dominant-baseline='middle' text-anchor='middle' fill='%23ffffff' font-family='sans-serif' font-size='24' font-weight='bold'>NUAM · Mercado Regional</text><text x='50%25' y='68%25' dominant-baseline='middle' text-anchor='middle' fill='%23cfe2ff' font-family='sans-serif' font-size='14'>Gestión de Calificaciones Tributarias DJ 1948</text></svg>"
+                             class="card-img-top" alt="Banner NUAM Calificaciones Tributarias">
+                        <ul class="list-group list-group-flush small">
+                            <li class="list-group-item"><strong>Ingreso y Edición:</strong> Cálculo directo de factores desde montos financieros.</li>
+                            <li class="list-group-item"><strong>Cargas Masivas CSV:</strong> Validación por lotes de 38 columnas con reporte de errores.</li>
+                            <li class="list-group-item"><strong>Rectificaciones:</strong> Flujo de solicitud por corredor y aprobación por supervisor.</li>
+                            <li class="list-group-item"><strong>Seguridad y Auditoría:</strong> Control por roles, bloqueo de intentos y bitácora de cambios.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section id="contacto" class="py-5 flex-grow-1">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-md-5">
+                    <h4 class="fw-bold" style="color: #1B4965;">Información de Contacto</h4>
+                    <p class="text-muted small">¿Necesitas habilitar una cuenta de corredora o reportar una incidencia operativa?</p>
+                    <ul class="list-unstyled small">
+                        <li class="mb-2"><strong>Mesa de Ayuda TI:</strong> soporte.nuam@inacapmail.cl</li>
+                        <li class="mb-2"><strong>Equipo de Desarrollo:</strong> Grupo 2 · Ingeniería de Software</li>
+                        <li class="mb-2"><strong>Sede:</strong> Talca, Región del Maule, Chile</li>
+                    </ul>
+                </div>
+                <div class="col-md-7">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <h6 class="fw-bold mb-3">Envíanos una consulta</h6>
+                            <form id="formContacto" onsubmit="event.preventDefault(); document.getElementById('alertaContacto').classList.remove('d-none'); this.reset();">
+                                <div class="row g-2 mb-2">
+                                    <div class="col-md-6">
+                                        <input type="text" class="form-control form-control-sm" placeholder="Nombre completo" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <input type="email" class="form-control form-control-sm" placeholder="Correo institucional" required>
+                                    </div>
+                                </div>
+                                <textarea class="form-control form-control-sm mb-2" rows="2" placeholder="Detalle de su consulta..." required></textarea>
+                                <button type="submit" class="btn btn-sm text-white fw-bold px-3" style="background-color: #1C4E80;">Enviar Mensaje</button>
+                                <div id="alertaContacto" class="alert alert-success d-none py-1 small mt-2 mb-0">
+                                    Mensaje enviado correctamente. Nuestro equipo responderá a la brevedad.
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-white border-top py-3 text-center text-muted small">
+        Proyecto NUAM · Evaluación 3 Ingeniería de Software (2026)
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
