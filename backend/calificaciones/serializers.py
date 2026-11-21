@@ -72,7 +72,9 @@ class CalificacionSerializer(serializers.ModelSerializer):
     # Escritura
     instrumento = serializers.SlugRelatedField(
         slug_field="codigo_nemotecnico",
-        queryset=Instrumento.objects.filter(emisor__activo=True)) 
+        queryset=Instrumento.objects.filter(emisor__activo=True),
+        error_messages={"does_not_exist": "El instrumento '{value}' no existe o su emisor está desactivado.",
+                        "invalid": "Instrumento no válido."})
     mercado = serializers.CharField(write_only=True, required=False)
     ingreso_montos = serializers.BooleanField(write_only=True, required=False, default=False)
     is_fut = serializers.BooleanField(required=True)  # HU-01 criterio 1

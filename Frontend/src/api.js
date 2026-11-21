@@ -39,6 +39,31 @@ export class ErrorApi extends Error {
     }
 }
 
+// Nombre que ve el usuario para cada campo que devuelve la API
+const ETIQUETAS = {
+    instrumento: 'Instrumento',
+    mercado: 'Mercado',
+    ejercicio_comercial: 'Año',
+    secuencia_evento: 'Secuencia Evento',
+    fecha_pago: 'Fecha Pago',
+    valor_historico: 'Valor Histórico',
+    factor_actualizacion: 'Factor Actualización',
+    descripcion: 'Descripción',
+    is_fut: 'FUT',
+    numero_dividendo: 'N.º dividendo',
+    tipo_sociedad: 'Tipo sociedad',
+    archivo: 'Archivo',
+    formato_tipo: 'Tipo de carga',
+    email: 'Correo',
+    password: 'Contraseña',
+};
+
+const etiqueta = (campo) => {
+    const factor = campo.match(/^f(\d{2})$/); // f08..f37
+    if (factor) return `Factor-${factor[1]}`;
+    return ETIQUETAS[campo] || campo;
+};
+
 /** Convierte las respuestas de error de DRF ({campo: [mensajes]}, {detail}, [..]) en texto. */
 export function mensajeDeError(datos) {
     if (!datos) return '';
@@ -48,7 +73,7 @@ export function mensajeDeError(datos) {
     return Object.entries(datos)
         .map(([campo, valor]) => {
             const texto = mensajeDeError(valor);
-            return campo === 'non_field_errors' || campo === 'factores' ? texto : `${campo}: ${texto}`;
+            return campo === 'non_field_errors' || campo === 'factores' ? texto : `${etiqueta(campo)}: ${texto}`;
         })
         .join(' · ');
 }
