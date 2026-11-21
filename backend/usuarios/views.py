@@ -83,13 +83,27 @@ def logout_web(request):
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as CoreValidationError
 from django.core.validators import validate_email
+from django.contrib.auth.decorators import login_required
 from calificaciones.models import Emisor
 from .models import Corredora, Usuario
 
+
+@login_required(login_url="/login/")
 def registro_web(request):
-    es_admin = request.user.is_authenticated and request.user.rol == Usuario.Rol.ADMIN_TI
+    """Registro de usuarios (HU-14). Solo el Administrador de TI, con sesión iniciada,
+    puede crear usuarios: así nadie puede darse de alta por su cuenta en una corredora
+    y ver sus datos (HU-19, Ley 21.459). Los demás roles reciben 403 y el intento
+    queda en la bitácora."""
+    if request.user.rol != Usuario.Rol.ADMIN_TI:
+        BitacoraAuditoria.registrar_evento(
+            request.user, BitacoraAuditoria.TipoAccion.GESTION_USUARIO,
+            obtener_ip(request), "Usuario", request.user.pk,
+            valor_nuevo={"resultado": "acceso denegado", "pantalla": "registro de usuarios"},
+        )
+        return render(request, "usuarios/registro.html", {"no_autorizado": True}, status=403)
+    es_admin = True
     corredoras = Corredora.objects.order_by("nombre_corredora")
-    roles = Usuario.Rol.choices if es_admin else [(Usuario.Rol.CORREDOR, "Corredor de Bolsa")]
+    roles = Usuario.Rol.choices
     contexto = {
         "corredoras": corredoras,
         "roles": roles,
@@ -106,9 +120,6 @@ def registro_web(request):
         "rut", "nombre_completo", "email", "rol", "pais",
         "corredora_id", "nueva_corredora_codigo", "nueva_corredora_nombre"
     )}
-    if not es_admin:
-        datos["rol"] = Usuario.Rol.CORREDOR
-
     password = request.POST.get("password", "")
     password_confirm = request.POST.get("password_confirm", "")
     rut_limpio = datos["rut"].replace(".", "").upper()
@@ -167,12 +178,11 @@ def registro_web(request):
         pais=datos["pais"] or "Chile",
         corredora=corredora,
     )
-    if request.user.is_authenticated:
-        BitacoraAuditoria.registrar_evento(
-            request.user, BitacoraAuditoria.TipoAccion.GESTION_USUARIO,
-            obtener_ip(request), "Usuario", usuario.pk,
-            valor_nuevo={"email": usuario.email, "rol": usuario.rol},
-        )
+    BitacoraAuditoria.registrar_evento(
+        request.user, BitacoraAuditoria.TipoAccion.GESTION_USUARIO,
+        obtener_ip(request), "Usuario", usuario.pk,
+        valor_nuevo={"email": usuario.email, "rol": usuario.rol},
+    )
 
     return render(request, "usuarios/registro.html", {
         "corredoras": Corredora.objects.order_by("nombre_corredora"),

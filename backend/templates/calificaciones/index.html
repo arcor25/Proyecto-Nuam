@@ -22,7 +22,9 @@
                     <li class="nav-item"><a class="nav-link" href="{% url 'inicio' %}">Inicio</a></li>
                     <li class="nav-item"><a class="nav-link active" href="{% url 'mantenedor' %}">Mantenedor</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'catalogo' %}">Emisores e Instrumentos</a></li>
+                    {% if request.user.rol == "ADMIN_TI" %}
                     <li class="nav-item"><a class="nav-link" href="{% url 'registro' %}">Registrar Usuario</a></li>
+                    {% endif %}
                 </ul>
                 <div class="d-flex align-items-center gap-2">
                     <span class="badge bg-light text-dark">{{ request.user.get_rol_display }}</span>
