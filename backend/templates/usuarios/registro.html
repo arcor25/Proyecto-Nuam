@@ -13,7 +13,11 @@
             <a class="navbar-brand fw-bold" href="{% url 'inicio' %}">NUAM · Calificaciones Tributarias</a>
             <div class="d-flex gap-2">
                 <a href="{% url 'inicio' %}" class="btn btn-sm btn-outline-light">Inicio</a>
-                <a href="{% url 'login' %}" class="btn btn-sm btn-light fw-bold text-primary">Iniciar Sesión</a>
+                <a href="{% url 'mantenedor' %}" class="btn btn-sm btn-outline-light">Mantenedor</a>
+                <form method="post" action="{% url 'logout' %}" class="m-0">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-light fw-bold text-primary">Cerrar Sesión</button>
+                </form>
             </div>
         </div>
     </nav>
@@ -24,12 +28,19 @@
                 Registro de Usuario del Sistema
             </div>
             <div class="card-body p-4">
+                {% if no_autorizado %}
+                <div class="alert alert-danger mb-0" role="alert">
+                    <strong>Acceso denegado.</strong> Solo el Administrador de TI puede registrar usuarios.
+                    El intento quedó registrado en la bitácora de auditoría.
+                    <div class="mt-2"><a href="{% url 'mantenedor' %}" class="btn btn-sm btn-outline-danger">Volver al mantenedor</a></div>
+                </div>
+                {% else %}
 
                 {% if exito %}
                 <div class="alert alert-success" role="alert">
                     <strong>¡Registro exitoso!</strong> {{ exito }}
                     <div class="mt-2">
-                        <a href="{% url 'login' %}" class="btn btn-sm btn-success fw-bold">Ir a Iniciar Sesión</a>
+                        <a href="{% url 'registro' %}" class="btn btn-sm btn-success fw-bold">Registrar otro usuario</a>
                     </div>
                 </div>
                 {% endif %}
@@ -123,17 +134,17 @@
                     <button type="submit" class="btn w-100 text-white fw-bold" style="background-color: #1C4E80;">REGISTRAR USUARIO</button>
                 </form>
 
-                <div class="text-center mt-3 small">
-                    ¿Ya tienes cuenta? <a href="{% url 'login' %}" class="fw-semibold">Inicia sesión aquí</a>
-                </div>
+                {% endif %}
             </div>
         </div>
     </div>
 
     <script>
         function toggleCorredora() {
-            const rol = document.getElementById("rol").value;
-            document.getElementById("bloqueCorredora").classList.toggle("d-none", rol !== "CORREDOR");
+            const rol = document.getElementById("rol");
+            const bloque = document.getElementById("bloqueCorredora");
+            if (!rol || !bloque) return;  // pantalla de acceso denegado: no hay formulario
+            bloque.classList.toggle("d-none", rol.value !== "CORREDOR");
         }
         document.addEventListener("DOMContentLoaded", toggleCorredora);
     </script>
