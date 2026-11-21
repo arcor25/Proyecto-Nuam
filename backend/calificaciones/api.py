@@ -146,5 +146,5 @@ class CalificacionViewSet(AuditoriaMixin, viewsets.ModelViewSet):
             factores = calcular_factores_desde_montos(montos)
         except DjangoValidationError as error:
             return Response({"factores": error.messages}, status=status.HTTP_400_BAD_REQUEST)
-        return Response({"factores": {str(c): str(v) for c, v in factores.items()},
+        return Response({"factores": {str(c): format(v, "f") for c, v in factores.items()},
                          "errores": errores_factores(factores)})

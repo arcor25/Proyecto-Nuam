@@ -193,7 +193,7 @@ class ArchivoCSV(models.Model):
                     raise ValueError("está repetida en el archivo (misma llave que una fila anterior)")
                 llaves_vistas.add(llave)
                 validas += 1
-                entrada.update(estado="OK", factores={str(c): str(v) for c, v in factores.items()})
+                entrada.update(estado="OK", factores={str(c): format(v, "f") for c, v in factores.items()})
             except (ValueError, InvalidOperation, ValidationError) as error:
                 motivo = error.messages[0] if isinstance(error, ValidationError) else str(error)
                 entrada.update(estado="ERROR", motivo=motivo)

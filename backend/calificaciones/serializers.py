@@ -104,11 +104,12 @@ class CalificacionSerializer(serializers.ModelSerializer):
     def get_origen(self, obj):
         return "CORREDOR" if obj.corredora_id else "SISTEMA"
 
+    # format(..., "f") evita la notación científica de Decimal (0 con 8 decimales se vería "0E-8")
     def get_factores(self, obj):
-        return {str(f.columna): str(f.factor_calculado) for f in obj.factores.all()}
+        return {str(f.columna): format(f.factor_calculado, "f") for f in obj.factores.all()}
 
     def get_montos(self, obj):
-        return {str(f.columna): str(f.monto_financiero) for f in obj.factores.all()}
+        return {str(f.columna): format(f.monto_financiero, "f") for f in obj.factores.all()}
 
     # ---------- Validación ----------
     def validate(self, attrs):
