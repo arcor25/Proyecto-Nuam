@@ -1,67 +1,53 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { COLUMNAS, clave, factoresParaApi, fechaParaApi, numeroParaApi } from './calificacion';
 
-const FormularioModificarModal = ({ show, datosFila, onCerrar, onGuardar }) => {
-    const [formData, setFormData] = useState({
-        mercado: '', instrumento: '', valorHistorico: '0,00000000', fechaPago: '', eventoCapital: '0',
-        descripcion: '', secuencia: '', anio: '', f08: '0,00000000', f09: '0,00000000', f10: '0,00000000',
-        f11: '0,00000000', f12: '0,00000000', f13: '0,00000000', f14: '0,00000000', f15: '0,00000000',
-        f16: '0,00000000', f17: '0,00000000', f18: '0,00000000', f19: '0,00000000', f19b: '0,00000000',
-        f20: '0,00000000', f21: '0,00000000', f22: '0,00000000', f23: '0,00000000', f24: '0,00000000',
-        f25: '0,00000000', f26: '0,00000000', f27: '0,00000000', f28: '0,00000000', f29: '0,00000000',
-        f30: '0,00000000', f31: '0,00000000', f32: '0,00000000', f33: '0,00000000', f34: '0,00000000',
-        f35: '0,00000000', f36: '0,00000000', f37: '0,00000000'
+// Formulario a partir de la fila seleccionada; guarda los 30 factores aunque la pantalla muestre solo algunos
+function formularioDesdeFila(fila) {
+    const form = {
+        mercado: fila?.mercado || '',
+        instrumento: fila?.instrumento || '',
+        valorHistorico: fila?.valorHistorico ?? '0',
+        fechaPago: fila?.fechaPago || '',
+        descripcion: fila?.descripcion || '',
+        secuencia: fila?.secuencia ?? '',
+        anio: fila?.ejercicio ?? '',
+        factorActualizacion: fila?.factorAct ?? '0',
+    };
+    COLUMNAS.forEach((col) => {
+        form[clave(col)] = fila?.[clave(col)] ?? '0';
     });
+    return form;
+}
 
-    useEffect(() => {
-        if (datosFila) {
-            setFormData({
-                mercado: datosFila.mercado || 'AC',
-                instrumento: datosFila.instrumento || datosFila.nemotecnico || '',
-                valorHistorico: datosFila.valorHistorico || '0,00000000',
-                fechaPago: datosFila.fechaPago || '',
-                eventoCapital: datosFila.eventoCapital || '0',
-                descripcion: datosFila.descripcion || '',
-                secuencia: datosFila.secuencia || '',
-                anio: datosFila.ejercicio || '',
-                f08: datosFila.f08 || '0,00000000', f09: datosFila.f09 || '0,00000000', f10: datosFila.f10 || '0,00000000',
-                f11: datosFila.f11 || '0,00000000', f12: datosFila.f12 || '0,00000000', f13: datosFila.f13 || '0,00000000',
-                f14: datosFila.f14 || '0,00000000', f15: datosFila.f15 || '0,00000000', f16: datosFila.f16 || '0,00000000',
-                f17: datosFila.f17 || '0,00000000', f18: datosFila.f18 || '0,00000000', f19: datosFila.f19 || '0,00000000',
-                f19b: datosFila.f19b || '0,00000000', f20: datosFila.f20 || '0,00000000', f21: datosFila.f21 || '0,00000000',
-                f22: datosFila.f22 || '0,00000000', f23: datosFila.f23 || '0,00000000', f24: datosFila.f24 || '0,00000000',
-                f25: datosFila.f25 || '0,00000000', f26: datosFila.f26 || '0,00000000', f27: datosFila.f27 || '0,00000000',
-                f28: datosFila.f28 || '0,00000000', f29: datosFila.f29 || '0,00000000', f30: datosFila.f30 || '0,00000000',
-                f31: datosFila.f31 || '0,00000000', f32: datosFila.f32 || '0,00000000', f33: datosFila.f33 || '0,00000000',
-                f34: datosFila.f34 || '0,00000000', f35: datosFila.f35 || '0,00000000', f36: datosFila.f36 || '0,00000000',
-                f37: datosFila.f37 || '0,00000000'
-            });
-        }
-    }, [datosFila]);
+// El padre lo monta con key = id de la fila, así cada apertura parte de los datos de esa fila
+const FormularioModificarModal = ({ show, datosFila, onCerrar, onGuardar }) => {
+    const [formData, setFormData] = useState(() => formularioDesdeFila(datosFila));
+    const [error, setError] = useState('');
+    const [guardando, setGuardando] = useState(false);
 
-    if (!show) return null;
+    if (!show || !datosFila) return null;
 
     const handleChange = (campo, valor) => setFormData({ ...formData, [campo]: valor });
 
-    const handleGuardar = (e) => {
+    const handleGuardar = async (e) => {
         e.preventDefault();
-        onGuardar({
-            ...datosFila,
-            ejercicio: formData.anio,
-            instrumento: formData.instrumento,
-            fechaPago: formData.fechaPago,
-            descripcion: formData.descripcion,
-            secuencia: formData.secuencia,
-            mercado: formData.mercado,
-            valorHistorico: formData.valorHistorico,
-            eventoCapital: formData.eventoCapital,
-            f08: formData.f08, f09: formData.f09, f10: formData.f10, f11: formData.f11, f12: formData.f12,
-            f13: formData.f13, f14: formData.f14, f15: formData.f15, f16: formData.f16, f17: formData.f17,
-            f18: formData.f18, f19: formData.f19, f19b: formData.f19b, f20: formData.f20, f21: formData.f21,
-            f22: formData.f22, f23: formData.f23, f24: formData.f24, f25: formData.f25, f26: formData.f26,
-            f27: formData.f27, f28: formData.f28, f29: formData.f29, f30: formData.f30, f31: formData.f31,
-            f32: formData.f32, f33: formData.f33, f34: formData.f34, f35: formData.f35, f36: formData.f36, f37: formData.f37
-        });
-        onCerrar();
+        setError('');
+        setGuardando(true);
+        try {
+            // Mercado, instrumento, año y secuencia forman la llave: el backend no permite cambiarlos
+            await onGuardar({
+                fecha_pago: fechaParaApi(formData.fechaPago),
+                valor_historico: numeroParaApi(formData.valorHistorico),
+                factor_actualizacion: numeroParaApi(formData.factorActualizacion),
+                descripcion: formData.descripcion.trim(),
+                ...factoresParaApi(formData),
+            });
+            onCerrar();
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setGuardando(false);
+        }
     };
 
     return (
@@ -73,16 +59,17 @@ const FormularioModificarModal = ({ show, datosFila, onCerrar, onGuardar }) => {
                         <button type="button" className="btn-close" onClick={onCerrar}></button>
                     </div>
                     <div className="modal-body p-3" style={{ fontSize: '0.78rem' }}>
+                        {error && <div className="alert alert-danger py-2 small">{error}</div>}
                         <div className="row g-2 mb-3 bg-light p-2 border rounded">
                             <div className="col-md-4">
-                                <div className="d-flex align-items-center mb-1"><span className="w-40 fw-semibold">Mercado:</span><input type="text" className="form-control form-control-sm" value={formData.mercado} onChange={(e) => handleChange('mercado', e.target.value)} /></div>
-                                <div className="d-flex align-items-center mb-1"><span className="w-40 fw-semibold">Fecha Pago:</span><input type="text" className="form-control form-control-sm" value={formData.fechaPago} onChange={(e) => handleChange('fechaPago', e.target.value)} /></div>
-                                <div className="d-flex align-items-center"><span className="w-40 fw-semibold">Secuencia Evento:</span><input type="text" className="form-control form-control-sm" value={formData.secuencia} onChange={(e) => handleChange('secuencia', e.target.value)} /></div>
+                                <div className="d-flex align-items-center mb-1"><span className="w-40 fw-semibold">Mercado:</span><input type="text" className="form-control form-control-sm" value={formData.mercado} disabled /></div>
+                                <div className="d-flex align-items-center mb-1"><span className="w-40 fw-semibold">Fecha Pago:</span><input type="text" className="form-control form-control-sm" placeholder="DD-MM-AAAA" value={formData.fechaPago} onChange={(e) => handleChange('fechaPago', e.target.value)} /></div>
+                                <div className="d-flex align-items-center"><span className="w-40 fw-semibold">Secuencia Evento:</span><input type="text" className="form-control form-control-sm" value={formData.secuencia} disabled /></div>
                             </div>
                             <div className="col-md-4">
-                                <div className="d-flex align-items-center mb-1"><span className="w-40 fw-semibold">Instrumento:</span><input type="text" className="form-control form-control-sm" value={formData.instrumento} onChange={(e) => handleChange('instrumento', e.target.value)} /></div>
-                                <div className="d-flex align-items-center mb-1"><span className="w-40 fw-semibold">Evento Capital:</span><input type="text" className="form-control form-control-sm" value={formData.eventoCapital} onChange={(e) => handleChange('eventoCapital', e.target.value)} /></div>
-                                <div className="d-flex align-items-center"><span className="w-40 fw-semibold">Año:</span><input type="text" className="form-control form-control-sm" value={formData.anio} onChange={(e) => handleChange('anio', e.target.value)} /></div>
+                                <div className="d-flex align-items-center mb-1"><span className="w-40 fw-semibold">Instrumento:</span><input type="text" className="form-control form-control-sm" value={formData.instrumento} disabled /></div>
+                                <div className="d-flex align-items-center mb-1"><span className="w-40 fw-semibold">Factor Actualización:</span><input type="text" className="form-control form-control-sm" value={formData.factorActualizacion} onChange={(e) => handleChange('factorActualizacion', e.target.value)} /></div>
+                                <div className="d-flex align-items-center"><span className="w-40 fw-semibold">Año:</span><input type="text" className="form-control form-control-sm" value={formData.anio} disabled /></div>
                             </div>
                             <div className="col-md-4">
                                 <div className="d-flex align-items-center mb-1"><span className="w-40 fw-semibold">Valor Histórico:</span><input type="text" className="form-control form-control-sm" value={formData.valorHistorico} onChange={(e) => handleChange('valorHistorico', e.target.value)} /></div>
@@ -115,7 +102,7 @@ const FormularioModificarModal = ({ show, datosFila, onCerrar, onGuardar }) => {
                         </div>
                     </div>
                     <div className="modal-footer justify-content-end py-2">
-                        <button type="button" className="btn btn-sm btn-outline-primary px-4" onClick={handleGuardar}>GUARDAR</button>
+                        <button type="button" className="btn btn-sm btn-outline-primary px-4" onClick={handleGuardar} disabled={guardando}>{guardando ? 'GUARDANDO…' : 'GUARDAR'}</button>
                     </div>
                 </div>
             </div>
